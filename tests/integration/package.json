@@ -1,0 +1,12 @@
+{
+  "name": "aegisscript-integration-tests",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@aegisscript/ast": "workspace:*",
+    "@aegisscript/checker": "workspace:*",
+    "@aegisscript/interpreter": "workspace:*",
+    "@aegisscript/lexer": "workspace:*",
+    "@aegisscript/parser": "workspace:*"
+  }
+}

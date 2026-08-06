@@ -1,0 +1,74 @@
+# Grammar
+
+This document describes **implemented** syntax only.
+
+## Program
+
+```text
+program        := workspace_decl+
+workspace_decl := 'workspace' IDENT '{' member* '}'
+member         := asset_decl | telemetry_decl | rule_decl | test_decl
+```
+
+## Declarations
+
+```text
+asset_decl     := 'asset' IDENT IDENT '{' property* '}'
+telemetry_decl := 'telemetry' IDENT '{' property* '}'
+property       := IDENT '=' literal ';'
+
+rule_decl := 'rule' IDENT '{'
+               observe_stage?
+               then_stage*
+               require_clause*
+               respond_block?
+               rollback_block?
+             '}'
+
+observe_stage := 'observe' IDENT 'where' expression ';'
+then_stage    := 'then' IDENT 'where' expression 'within' DURATION ';'
+require_clause := 'require' ('confidence' | 'sources') compare_op NUMBER ';'
+
+respond_block := 'respond' '{' respond_stmt* '}'
+respond_stmt  := isolate_stmt | preserve_stmt | approval_stmt
+isolate_stmt  := 'isolate' 'endpoint' IDENT ';'
+preserve_stmt := 'preserve' 'evidence' ';'
+approval_stmt := 'approval' 'required' 'for' IDENT ';'
+
+rollback_block := 'rollback' '{' rollback_stmt* '}'
+rollback_stmt  := 'reconnect' 'endpoint' IDENT ';'
+
+test_decl := 'test' IDENT '{' expect_stmt* '}'
+expect_stmt := 'expect' 'rule' IDENT 'to_match' ';'
+```
+
+## Expressions
+
+```text
+expression  := or_expr
+or_expr     := and_expr ('or' and_expr)*
+and_expr    := unary_expr ('and' unary_expr)*
+unary_expr  := 'not' unary_expr | comparison
+comparison  := primary (compare_op primary)?
+primary     := '(' expression ')' | literal | property_path
+property_path := IDENT ('.' IDENT)*
+literal     := STRING | NUMBER | BOOLEAN | DURATION
+compare_op  := '==' | '!=' | '>' | '>=' | '<' | '<='
+```
+
+## Literals
+
+- Strings: `"text"`
+- Numbers: `2`, `0.80`
+- Booleans: `true`, `false`
+- Durations: `30s`, `5m`, `1h` (whole numbers only)
+
+## Not implemented
+
+- Protected-resource declarations
+- Live stream subscriptions
+- Vendor-specific action adapters
+- Function-call response syntax beyond the statements above
+- Complex type annotations
+- Imports/modules across files
+- Macros or templates
