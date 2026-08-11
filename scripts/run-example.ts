@@ -2,8 +2,9 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createSourceFile, formatDiagnostic } from "@aegisscript/ast";
 import { check } from "@aegisscript/checker";
-import { interpret, type MockSecurityEvent } from "@aegisscript/interpreter";
+import { validateMockEvents } from "@aegisscript/interpreter";
 import { parse } from "@aegisscript/parser";
+import { runAegisTests } from "@aegisscript/test-runner";
 
 function usage(): never {
   console.error("Usage: tsx scripts/run-example.ts <example-directory>");
@@ -28,9 +29,11 @@ for (const diagnostic of parsed.diagnostics) {
 }
 
 if (!parsed.program) {
+  console.log("Policy: FAIL");
   console.error("Parse failed.");
   process.exit(1);
 }
+console.log("Policy: PASS");
 
 const checked = check(parsed.program, source);
 for (const diagnostic of checked.diagnostics) {
@@ -38,33 +41,54 @@ for (const diagnostic of checked.diagnostics) {
 }
 
 if (checked.diagnostics.some((d) => d.severity === "error")) {
-  console.error("Semantic check failed.");
+  console.log("Semantic check: FAIL");
   process.exit(1);
 }
+console.log("Semantic check: PASS");
 
-let events: MockSecurityEvent[];
+let parsedJson: unknown;
 try {
-  events = JSON.parse(readFileSync(eventsPath, "utf8")) as MockSecurityEvent[];
-  if (!Array.isArray(events)) {
-    throw new Error("events.json must contain an array");
-  }
+  parsedJson = JSON.parse(readFileSync(eventsPath, "utf8"));
 } catch (error) {
   console.error(`Failed to load events: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 }
 
-const result = interpret(checked.program, events);
+const validated = validateMockEvents(parsedJson);
+if (!validated.ok) {
+  for (const diagnostic of validated.diagnostics) {
+    console.error(`${diagnostic.path}: ${diagnostic.message}`);
+  }
+  console.log("Events: FAIL");
+  process.exit(1);
+}
 
-console.log("=== Rule results ===");
-for (const rule of result.ruleResults) {
+const testResult = runAegisTests({
+  program: checked.program,
+  events: validated.events,
+});
+
+const matched = testResult.interpretResult.ruleResults.filter((r) => r.matched);
+console.log(`Simulation: ${matched.length > 0 ? "MATCH" : "NO MATCH"}`);
+
+const passedCount = testResult.tests.filter((t) => t.passed).length;
+const failedCount = testResult.tests.length - passedCount;
+console.log(`Tests: ${passedCount} passed, ${failedCount} failed`);
+
+console.log("\n=== Rule results ===");
+for (const rule of testResult.interpretResult.ruleResults) {
   console.log(
     `${rule.matched ? "MATCH" : "NO MATCH"} ${rule.ruleName}: ${rule.reason} (confidence=${rule.confidence}, sources=${rule.sources})`,
   );
 }
 
 console.log("\n=== Simulated responses (audit) ===");
-for (const entry of result.auditLog) {
+for (const entry of testResult.interpretResult.auditLog) {
   console.log(`[${entry.id}] ${entry.result.status}: ${entry.result.message}`);
 }
 
 console.log("\nWARNING: Response actions are simulated only. No real systems were modified.");
+
+if (!testResult.passed) {
+  process.exit(1);
+}

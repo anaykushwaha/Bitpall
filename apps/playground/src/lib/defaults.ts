@@ -7,6 +7,10 @@ export const DEFAULT_POLICY = `workspace corporate_network {
     source = "endpoint-agent";
   }
 
+  telemetry filesystem {
+    source = "file-monitor";
+  }
+
   rule suspicious_encryption_chain {
     observe process_start where process.name == "powershell.exe";
 

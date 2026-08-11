@@ -24,6 +24,10 @@ Rollback statements are recorded separately from simulated containment actions. 
 
 Every executor decision produces an audit entry with action type, status, and message.
 
+## Mock event validation
+
+Ordinary malformed event JSON is reported through `validateMockEvents` diagnostics rather than thrown exceptions. Interpretation and tests should only run on validated events.
+
 ## Future adapter boundaries
 
 A `ResponseExecutor` interface exists so a future adapter can be introduced without coupling the interpreter to a vendor SDK. Real adapters require a separate security review and are currently deferred.

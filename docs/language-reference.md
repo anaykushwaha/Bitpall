@@ -1,10 +1,12 @@
 # Language reference
 
-Supported by the current lexer, parser, checker, and interpreter unless noted.
+Supported by the current lexer, parser, checker, interpreter, and test-runner unless noted.
 
 ## `workspace`
 
 Top-level container for assets, telemetry, rules, and tests.
+
+Declaration names for assets, telemetry, rules, and tests share one namespace inside a workspace.
 
 ## `asset`
 
@@ -16,8 +18,6 @@ asset endpoint finance_laptop {
 }
 ```
 
-The asset kind is an identifier. Only endpoint references are used by the initial response actions.
-
 ## `telemetry`
 
 Declares a named telemetry source. At least one telemetry declaration is required per workspace.
@@ -28,20 +28,40 @@ telemetry edr {
 }
 ```
 
+Rules:
+
+- `source` is required and must be a non-empty string literal
+- Duplicate source strings in the same workspace are rejected
+- Declared source strings define which mock event `source` values may satisfy detection stages and `require sources`
+
 ## `rule`
 
-Contains an optional `observe` stage, zero or more `then` stages, `require` clauses, and optional `respond` / `rollback` blocks.
+Contains:
+
+- zero or one `observe`
+- zero or more `then`
+- zero or more `require`
+- zero or one `respond`
+- zero or one `rollback`
+
+Duplicate `observe`, `respond`, or `rollback` sections are diagnostics (first occurrence is kept).
 
 ## `observe` / `then` / `within`
 
-`observe` matches the first stage. Each `then` stage must match a later event inside the declared duration window measured from the observe event timestamp.
+`observe` matches the first stage. Each `then` stage must match a later event that:
+
+- satisfies the condition
+- is at or after the previous matched event
+- is within the `within` duration measured from the observe event
+
+Equal timestamps are allowed (`>=`). Tie-breaking uses original input order after timestamp sort.
 
 ## `require`
 
 Supported metrics:
 
-- `confidence` — value must be between `0.0` and `1.0`
-- `sources` — distinct mock event `source` values
+- `confidence` — chain confidence is the minimum explicit event confidence; missing confidence is `0`. Threshold must be between `0.0` and `1.0`.
+- `sources` — distinct matched event `source` values from declared telemetry. Threshold must be a non-negative integer.
 
 ## `respond`
 
@@ -67,7 +87,7 @@ test ransomware_sequence {
 }
 ```
 
-Test declarations are parsed and checked. Dedicated test-runner execution is not complete; integration tests drive the interpreter directly.
+`@aegisscript/test-runner` executes these expectations against interpreter results.
 
 ## Operators and literals
 

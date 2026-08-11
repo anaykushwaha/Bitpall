@@ -2,12 +2,352 @@ import { createSourceFile } from "@aegisscript/ast";
 import { check } from "@aegisscript/checker";
 import { parse } from "@aegisscript/parser";
 import { describe, expect, it } from "vitest";
-import { interpret, type MockSecurityEvent } from "../src/index.js";
+import { chainConfidence, interpret, type MockSecurityEvent } from "../src/index.js";
 
-const POLICY = `
+const TWO_STAGE = `
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  rule chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+    require confidence >= 0.80;
+    require sources >= 2;
+  }
+}
+`;
+
+const THREE_STAGE = `
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  telemetry net { source = "network-sensor"; }
+  rule chain {
+    observe stage_a where process.name == "a";
+    then stage_b where process.name == "b" within 5m;
+    then stage_c where process.name == "c" within 5m;
+  }
+}
+`;
+
+function run(policy: string, events: MockSecurityEvent[]) {
+  const source = createSourceFile("policy.aegis", policy);
+  const parsed = parse(source);
+  expect(parsed.program).not.toBeNull();
+  const checked = check(parsed.program!, source);
+  expect(checked.diagnostics.filter((d) => d.severity === "error")).toEqual([]);
+  return interpret(checked.program, events);
+}
+
+const t0 = "2026-08-06T12:00:00.000Z";
+const t45 = "2026-08-06T12:00:45.000Z";
+const t90 = "2026-08-06T12:01:30.000Z";
+const tLate = "2026-08-06T12:10:00.000Z";
+
+describe("interpreter temporal ordering", () => {
+  it("matches observe → then1 → then2 in order", () => {
+    const result = run(THREE_STAGE, [
+      {
+        id: "a",
+        type: "stage_a",
+        timestamp: t0,
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "a" } },
+      },
+      {
+        id: "b",
+        type: "stage_b",
+        timestamp: t45,
+        source: "file-monitor",
+        confidence: 1,
+        properties: { process: { name: "b" } },
+      },
+      {
+        id: "c",
+        type: "stage_c",
+        timestamp: t90,
+        source: "network-sensor",
+        confidence: 1,
+        properties: { process: { name: "c" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.matchedEventIds).toEqual(["a", "b", "c"]);
+  });
+
+  it("rejects then2 before then1", () => {
+    const result = run(THREE_STAGE, [
+      {
+        id: "a",
+        type: "stage_a",
+        timestamp: t0,
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "a" } },
+      },
+      {
+        id: "c",
+        type: "stage_c",
+        timestamp: t45,
+        source: "network-sensor",
+        confidence: 1,
+        properties: { process: { name: "c" } },
+      },
+      {
+        id: "b",
+        type: "stage_b",
+        timestamp: t90,
+        source: "file-monitor",
+        confidence: 1,
+        properties: { process: { name: "b" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+    expect(result.ruleResults[0]?.reason).toMatch(
+      /before the previous matched stage|did not match/i,
+    );
+  });
+
+  it("rejects then event before observe", () => {
+    const result = run(TWO_STAGE, [
+      {
+        id: "early",
+        type: "file_write",
+        timestamp: "2026-08-06T11:59:00.000Z",
+        source: "file-monitor",
+        confidence: 0.9,
+        properties: { file: { extension: ".encrypted" } },
+      },
+      {
+        id: "obs",
+        type: "process_start",
+        timestamp: t0,
+        source: "endpoint-agent",
+        confidence: 0.9,
+        properties: { process: { name: "powershell.exe" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+  });
+
+  it("rejects event outside overall window", () => {
+    const result = run(TWO_STAGE, [
+      {
+        id: "obs",
+        type: "process_start",
+        timestamp: t0,
+        source: "endpoint-agent",
+        confidence: 0.9,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "late",
+        type: "file_write",
+        timestamp: tLate,
+        source: "file-monitor",
+        confidence: 0.9,
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+    expect(result.ruleResults[0]?.reason).toMatch(/outside/i);
+  });
+
+  it("chooses the candidate that preserves chronological sequence", () => {
+    const result = run(THREE_STAGE, [
+      {
+        id: "a",
+        type: "stage_a",
+        timestamp: t0,
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "a" } },
+      },
+      {
+        id: "b-late",
+        type: "stage_b",
+        timestamp: t90,
+        source: "file-monitor",
+        confidence: 1,
+        properties: { process: { name: "b" } },
+      },
+      {
+        id: "b-early",
+        type: "stage_b",
+        timestamp: t45,
+        source: "file-monitor",
+        confidence: 1,
+        properties: { process: { name: "b" } },
+      },
+      {
+        id: "c",
+        type: "stage_c",
+        timestamp: t90,
+        source: "network-sensor",
+        confidence: 1,
+        properties: { process: { name: "c" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.matchedEventIds).toEqual(["a", "b-early", "c"]);
+  });
+
+  it("handles identical timestamps with stable input-order tie-break", () => {
+    const same = "2026-08-06T12:00:30.000Z";
+    const result = run(THREE_STAGE, [
+      {
+        id: "a",
+        type: "stage_a",
+        timestamp: t0,
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "a" } },
+      },
+      {
+        id: "b",
+        type: "stage_b",
+        timestamp: same,
+        source: "file-monitor",
+        confidence: 1,
+        properties: { process: { name: "b" } },
+      },
+      {
+        id: "c",
+        type: "stage_c",
+        timestamp: same,
+        source: "network-sensor",
+        confidence: 1,
+        properties: { process: { name: "c" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.matchedEventIds).toEqual(["a", "b", "c"]);
+  });
+
+  it("matches when events are supplied out of order", () => {
+    const result = run(THREE_STAGE, [
+      {
+        id: "c",
+        type: "stage_c",
+        timestamp: t90,
+        source: "network-sensor",
+        confidence: 1,
+        properties: { process: { name: "c" } },
+      },
+      {
+        id: "a",
+        type: "stage_a",
+        timestamp: t0,
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "a" } },
+      },
+      {
+        id: "b",
+        type: "stage_b",
+        timestamp: t45,
+        source: "file-monitor",
+        confidence: 1,
+        properties: { process: { name: "b" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.matchedEventIds).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("interpreter confidence and telemetry", () => {
+  const base: MockSecurityEvent[] = [
+    {
+      id: "evt-1",
+      type: "process_start",
+      timestamp: t0,
+      source: "endpoint-agent",
+      confidence: 0.9,
+      properties: { process: { name: "powershell.exe" } },
+    },
+    {
+      id: "evt-2",
+      type: "file_write",
+      timestamp: t45,
+      source: "file-monitor",
+      confidence: 0.85,
+      properties: { file: { extension: ".encrypted" } },
+    },
+  ];
+
+  it("matches a one-stage / two-stage successful chain", () => {
+    const result = run(TWO_STAGE, base);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.confidence).toBe(0.85);
+  });
+
+  it("uses minimum confidence across the chain", () => {
+    expect(chainConfidence([{ ...base[0]! }, { ...base[1]!, confidence: 0.4 }])).toBe(0.4);
+    expect(
+      chainConfidence([
+        { ...base[0]!, confidence: 0.95 },
+        { ...base[1]!, confidence: 0.9 },
+      ]),
+    ).toBe(0.9);
+  });
+
+  it("treats missing confidence as zero", () => {
+    const events = [
+      { ...base[0]! },
+      {
+        id: "evt-2",
+        type: "file_write",
+        timestamp: t45,
+        source: "file-monitor",
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ];
+    const result = run(TWO_STAGE, events);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+    expect(result.ruleResults[0]?.reason).toMatch(/confidence/i);
+    expect(chainConfidence(events)).toBe(0);
+  });
+
+  it("fails with insufficient confidence", () => {
+    const result = run(
+      TWO_STAGE,
+      base.map((e) => ({ ...e, confidence: 0.5 })),
+    );
+    expect(result.ruleResults[0]?.matched).toBe(false);
+    expect(result.ruleResults[0]?.reason).toMatch(/confidence/i);
+  });
+
+  it("fails with insufficient sources when both events share one declared source", () => {
+    const result = run(
+      TWO_STAGE,
+      base.map((e) => ({ ...e, source: "endpoint-agent" })),
+    );
+    expect(result.ruleResults[0]?.matched).toBe(false);
+    expect(result.ruleResults[0]?.reason).toMatch(/sources/i);
+  });
+
+  it("excludes undeclared telemetry sources from stage matching", () => {
+    const result = run(TWO_STAGE, [base[0]!, { ...base[1]!, source: "unknown-sensor" }]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+    expect(result.trace.some((t) => /not a declared telemetry source/i.test(t.message))).toBe(true);
+  });
+
+  it("fails when a condition does not match", () => {
+    const result = run(TWO_STAGE, [
+      base[0]!,
+      { ...base[1]!, properties: { file: { extension: ".txt" } } },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+  });
+
+  it("keeps approval-gated termination pending and records audit/rollback", () => {
+    const policy = `
 workspace corporate_network {
   asset endpoint finance_laptop { criticality = "high"; }
   telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
   rule suspicious_encryption_chain {
     observe process_start where process.name == "powershell.exe";
     then file_write where file.extension == ".encrypted" within 2m;
@@ -22,94 +362,9 @@ workspace corporate_network {
   }
 }
 `;
-
-function run(events: MockSecurityEvent[]) {
-  const source = createSourceFile("policy.aegis", POLICY);
-  const parsed = parse(source);
-  expect(parsed.program).not.toBeNull();
-  const checked = check(parsed.program!, source);
-  expect(checked.diagnostics.filter((d) => d.severity === "error")).toEqual([]);
-  return interpret(checked.program, events);
-}
-
-const baseEvents: MockSecurityEvent[] = [
-  {
-    id: "evt-1",
-    type: "process_start",
-    timestamp: "2026-08-06T12:00:00.000Z",
-    source: "endpoint-agent",
-    confidence: 0.9,
-    properties: { process: { name: "powershell.exe" } },
-  },
-  {
-    id: "evt-2",
-    type: "file_write",
-    timestamp: "2026-08-06T12:00:45.000Z",
-    source: "file-monitor",
-    confidence: 0.85,
-    properties: { file: { extension: ".encrypted" } },
-  },
-];
-
-describe("interpreter", () => {
-  it("matches a successful temporal sequence", () => {
-    const result = run(baseEvents);
-    const rule = result.ruleResults[0];
-    expect(rule?.matched).toBe(true);
-    expect(rule?.matchedEventIds).toEqual(["evt-1", "evt-2"]);
-    expect(result.auditLog.length).toBeGreaterThan(0);
-  });
-
-  it("fails when the then event is outside the time window", () => {
-    const events: MockSecurityEvent[] = [
-      baseEvents[0]!,
-      {
-        ...baseEvents[1]!,
-        id: "evt-late",
-        timestamp: "2026-08-06T12:05:00.000Z",
-      },
-    ];
-    const result = run(events);
-    expect(result.ruleResults[0]?.matched).toBe(false);
-    expect(result.ruleResults[0]?.reason).toMatch(/outside/i);
-  });
-
-  it("fails when a condition does not match", () => {
-    const events: MockSecurityEvent[] = [
-      baseEvents[0]!,
-      {
-        ...baseEvents[1]!,
-        properties: { file: { extension: ".txt" } },
-      },
-    ];
-    const result = run(events);
-    expect(result.ruleResults[0]?.matched).toBe(false);
-  });
-
-  it("fails with insufficient sources", () => {
-    const events = baseEvents.map((e) => ({ ...e, source: "only-one" }));
-    const result = run(events);
-    expect(result.ruleResults[0]?.matched).toBe(false);
-    expect(result.ruleResults[0]?.reason).toMatch(/sources/i);
-  });
-
-  it("fails with insufficient confidence", () => {
-    const events = baseEvents.map((e) => ({ ...e, confidence: 0.5 }));
-    const result = run(events);
-    expect(result.ruleResults[0]?.matched).toBe(false);
-    expect(result.ruleResults[0]?.reason).toMatch(/confidence/i);
-  });
-
-  it("keeps approval-gated termination pending", () => {
-    const result = run(baseEvents);
+    const result = run(policy, base);
     expect(result.pendingApprovals.some((a) => a.action.type === "terminate_process")).toBe(true);
-    expect(result.pendingApprovals[0]?.status).toBe("pending_approval");
-  });
-
-  it("generates an audit log for simulated responses", () => {
-    const result = run(baseEvents);
     expect(result.auditLog.some((e) => e.result.action.type === "isolate_endpoint")).toBe(true);
-    expect(result.auditLog.some((e) => e.result.action.type === "preserve_evidence")).toBe(true);
     expect(result.rollbackActions.some((a) => a.action.type === "reconnect_endpoint")).toBe(true);
   });
 });

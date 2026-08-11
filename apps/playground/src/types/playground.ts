@@ -1,6 +1,6 @@
-import type { Diagnostic } from "@aegisscript/ast";
+import type { Diagnostic, ProgramNode } from "@aegisscript/ast";
 import type { InterpretResult } from "@aegisscript/interpreter";
-import type { ProgramNode } from "@aegisscript/ast";
+import type { TestRunResult } from "@aegisscript/test-runner";
 
 export interface PlaygroundState {
   source: string;
@@ -8,5 +8,6 @@ export interface PlaygroundState {
   diagnostics: Diagnostic[];
   program: ProgramNode | null;
   interpretResult: InterpretResult | null;
+  testResult: TestRunResult | null;
   eventError: string | null;
 }

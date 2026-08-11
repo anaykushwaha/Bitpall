@@ -14,6 +14,12 @@ export interface MockSecurityEvent {
   readonly confidence?: number;
 }
 
+/** Indexed event used for stable sorting when timestamps are equal. */
+export interface OrderedEvent {
+  readonly event: MockSecurityEvent;
+  readonly inputIndex: number;
+}
+
 export function eventTimeMs(event: MockSecurityEvent): number {
   if (typeof event.timestamp === "number") {
     return event.timestamp;
@@ -23,6 +29,20 @@ export function eventTimeMs(event: MockSecurityEvent): number {
     throw new Error(`Invalid event timestamp for event '${event.id}': ${event.timestamp}`);
   }
   return parsed;
+}
+
+/**
+ * Sort events by timestamp ascending. Ties break by original input order
+ * so equal-timestamp sequences remain deterministic.
+ */
+export function orderEvents(events: readonly MockSecurityEvent[]): OrderedEvent[] {
+  return events
+    .map((event, inputIndex) => ({ event, inputIndex }))
+    .sort((a, b) => {
+      const delta = eventTimeMs(a.event) - eventTimeMs(b.event);
+      if (delta !== 0) return delta;
+      return a.inputIndex - b.inputIndex;
+    });
 }
 
 export function getProperty(

@@ -7,6 +7,7 @@
     "@aegisscript/checker": "workspace:*",
     "@aegisscript/interpreter": "workspace:*",
     "@aegisscript/lexer": "workspace:*",
-    "@aegisscript/parser": "workspace:*"
+    "@aegisscript/parser": "workspace:*",
+    "@aegisscript/test-runner": "workspace:*"
   }
 }

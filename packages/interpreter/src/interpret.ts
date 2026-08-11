@@ -11,12 +11,8 @@ import {
   type ResponseAction,
   type ResponseExecutor,
 } from "@aegisscript/runtime";
-import {
-  aggregateConfidence,
-  countDistinctSources,
-  eventMatchesTypeAndCondition,
-} from "./evaluate.js";
-import { eventTimeMs, type MockSecurityEvent } from "./events.js";
+import { chainConfidence, countDistinctSources, eventMatchesTypeAndCondition } from "./evaluate.js";
+import { eventTimeMs, orderEvents, type MockSecurityEvent } from "./events.js";
 
 export interface TraceEntry {
   readonly timestamp: string;
@@ -65,10 +61,32 @@ function compareRequirement(metricValue: number, clause: RequireClauseNode): boo
   }
 }
 
+/** Collect declared telemetry `source` string values from a workspace. */
+export function collectTelemetrySources(workspace: WorkspaceDeclarationNode): Set<string> {
+  const sources = new Set<string>();
+  for (const member of workspace.members) {
+    if (member.kind !== "TelemetryDeclaration") continue;
+    for (const property of member.properties) {
+      if (property.name.name === "source" && property.value.kind === "StringLiteral") {
+        sources.add(property.value.value);
+      }
+    }
+  }
+  return sources;
+}
+
+function isDeclaredTelemetry(
+  event: MockSecurityEvent,
+  allowedSources: ReadonlySet<string>,
+): boolean {
+  return typeof event.source === "string" && allowedSources.has(event.source);
+}
+
 function evaluateRule(
   workspace: WorkspaceDeclarationNode,
   rule: RuleDeclarationNode,
   events: readonly MockSecurityEvent[],
+  allowedSources: ReadonlySet<string>,
   executor: ResponseExecutor,
   trace: TraceEntry[],
 ): RuleMatchResult {
@@ -87,7 +105,30 @@ function evaluateRule(
     };
   }
 
-  const observeMatches = events.filter((event) =>
+  const eligible = events.filter((event) => {
+    if (!isDeclaredTelemetry(event, allowedSources)) {
+      const relevantToObserve = eventMatchesTypeAndCondition(
+        event,
+        rule.observe!.eventType.name,
+        rule.observe!.condition,
+      );
+      const relevantToThen = rule.thenStages.some((stage) =>
+        eventMatchesTypeAndCondition(event, stage.eventType.name, stage.condition),
+      );
+      if (relevantToObserve || relevantToThen) {
+        trace.push({
+          timestamp: new Date(0).toISOString(),
+          ruleName,
+          message: `Ignored event '${event.id}' because source '${event.source ?? "<missing>"}' is not a declared telemetry source`,
+          eventIds: [event.id],
+        });
+      }
+      return false;
+    }
+    return true;
+  });
+
+  const observeMatches = eligible.filter((event) =>
     eventMatchesTypeAndCondition(event, rule.observe!.eventType.name, rule.observe!.condition),
   );
 
@@ -111,6 +152,7 @@ function evaluateRule(
   const observeEvent = observeMatches[0]!;
   const observeTime = eventTimeMs(observeEvent);
   const chain: MockSecurityEvent[] = [observeEvent];
+  let previousTime = observeTime;
 
   trace.push({
     timestamp: new Date(observeTime).toISOString(),
@@ -121,21 +163,32 @@ function evaluateRule(
 
   for (const thenStage of rule.thenStages) {
     const windowEnd = observeTime + thenStage.within.milliseconds;
-    const thenMatch = events.find((event) => {
+    const thenMatch = eligible.find((event) => {
       if (chain.some((c) => c.id === event.id)) return false;
       const t = eventTimeMs(event);
-      if (t < observeTime || t > windowEnd) return false;
+      // within is measured from observe; each stage must be at or after the previous match
+      if (t < previousTime || t > windowEnd) return false;
       return eventMatchesTypeAndCondition(event, thenStage.eventType.name, thenStage.condition);
     });
 
     if (!thenMatch) {
-      const outside = events.find((event) => {
+      const typeMatch = eligible.find((event) => {
         if (chain.some((c) => c.id === event.id)) return false;
         return eventMatchesTypeAndCondition(event, thenStage.eventType.name, thenStage.condition);
       });
-      const reason = outside
-        ? `Then stage '${thenStage.eventType.name}' matched outside the ${thenStage.within.raw} window`
-        : `Then stage '${thenStage.eventType.name}' condition did not match`;
+      let reason: string;
+      if (!typeMatch) {
+        reason = `Then stage '${thenStage.eventType.name}' condition did not match`;
+      } else {
+        const t = eventTimeMs(typeMatch);
+        if (t < previousTime) {
+          reason = `Then stage '${thenStage.eventType.name}' occurred before the previous matched stage`;
+        } else if (t > windowEnd) {
+          reason = `Then stage '${thenStage.eventType.name}' matched outside the ${thenStage.within.raw} window`;
+        } else {
+          reason = `Then stage '${thenStage.eventType.name}' condition did not match`;
+        }
+      }
       trace.push({
         timestamp: new Date(0).toISOString(),
         ruleName,
@@ -146,22 +199,23 @@ function evaluateRule(
         matched: false,
         reason,
         matchedEventIds: chain.map((e) => e.id),
-        confidence: aggregateConfidence(chain),
+        confidence: chainConfidence(chain),
         sources: countDistinctSources(chain),
         responses: [],
       };
     }
 
+    previousTime = eventTimeMs(thenMatch);
     chain.push(thenMatch);
     trace.push({
-      timestamp: new Date(eventTimeMs(thenMatch)).toISOString(),
+      timestamp: new Date(previousTime).toISOString(),
       ruleName,
       message: `Then matched event '${thenMatch.id}' within ${thenStage.within.raw}`,
       eventIds: [thenMatch.id],
     });
   }
 
-  const confidence = aggregateConfidence(chain);
+  const confidence = chainConfidence(chain);
   const sources = countDistinctSources(chain);
 
   for (const req of rule.requires) {
@@ -298,15 +352,16 @@ export function interpret(
 
   let ordered: MockSecurityEvent[];
   try {
-    ordered = [...events].sort((a, b) => eventTimeMs(a) - eventTimeMs(b));
+    ordered = orderEvents(events).map((entry) => entry.event);
   } catch (error) {
     throw error instanceof Error ? error : new Error(String(error));
   }
 
   for (const workspace of program.workspaces) {
+    const allowedSources = collectTelemetrySources(workspace);
     for (const member of workspace.members) {
       if (member.kind === "RuleDeclaration") {
-        ruleResults.push(evaluateRule(workspace, member, ordered, executor, trace));
+        ruleResults.push(evaluateRule(workspace, member, ordered, allowedSources, executor, trace));
       }
     }
   }

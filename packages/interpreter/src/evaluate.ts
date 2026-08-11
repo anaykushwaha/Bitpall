@@ -97,19 +97,22 @@ export function eventMatchesTypeAndCondition(
   return evaluateExpression(condition, event);
 }
 
-/** Aggregate mock confidence: max of matching event confidences, default 1.0 when absent. */
-export function aggregateConfidence(events: readonly MockSecurityEvent[]): number {
+/**
+ * Chain confidence is the minimum explicit confidence across matched events.
+ * Missing confidence is treated as 0 (weakest link).
+ */
+export function chainConfidence(events: readonly MockSecurityEvent[]): number {
   if (events.length === 0) return 0;
-  let max = 0;
-  let anyExplicit = false;
+  let min = Number.POSITIVE_INFINITY;
   for (const event of events) {
-    if (typeof event.confidence === "number") {
-      anyExplicit = true;
-      max = Math.max(max, event.confidence);
-    }
+    const value = typeof event.confidence === "number" ? event.confidence : 0;
+    min = Math.min(min, value);
   }
-  return anyExplicit ? max : 1;
+  return min === Number.POSITIVE_INFINITY ? 0 : min;
 }
+
+/** @deprecated Use chainConfidence. Kept as an alias for temporary compatibility. */
+export const aggregateConfidence = chainConfidence;
 
 export function countDistinctSources(events: readonly MockSecurityEvent[]): number {
   const sources = new Set<string>();

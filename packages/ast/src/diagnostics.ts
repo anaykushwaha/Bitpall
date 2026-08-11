@@ -27,8 +27,13 @@ export type DiagnosticCode =
   | "AEGIS3008"
   | "AEGIS3009"
   | "AEGIS3010"
+  | "AEGIS3011"
+  | "AEGIS3012"
+  | "AEGIS3013"
+  | "AEGIS3014"
   | "AEGIS4001"
-  | "AEGIS4002";
+  | "AEGIS4002"
+  | "AEGIS4003";
 
 export interface RelatedLocation {
   readonly fileName: string;

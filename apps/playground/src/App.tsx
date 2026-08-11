@@ -4,11 +4,12 @@ import { DiagnosticsPanel } from "./components/visualization/DiagnosticsPanel";
 import { EventInput } from "./components/simulator/EventInput";
 import { ResponsePanel } from "./components/response/ResponsePanel";
 import { SourceEditor } from "./components/editor/SourceEditor";
+import { TestResultsPanel } from "./components/simulator/TestResultsPanel";
 import { TracePanel } from "./components/simulator/TracePanel";
 import { usePlayground } from "./hooks/usePlayground";
 
 export function App() {
-  const { state, setSource, setEventsJson, check, runSimulation } = usePlayground();
+  const { state, setSource, setEventsJson, check, runSimulation, runTests } = usePlayground();
 
   return (
     <div className="layout">
@@ -26,6 +27,9 @@ export function App() {
           </button>
           <button type="button" onClick={() => runSimulation()}>
             Run Simulation
+          </button>
+          <button type="button" className="secondary" onClick={() => runTests()}>
+            Run Tests
           </button>
         </div>
       </header>
@@ -49,6 +53,8 @@ export function App() {
         <TracePanel result={state.interpretResult} />
         <ResponsePanel result={state.interpretResult} />
       </div>
+
+      <TestResultsPanel result={state.testResult} />
     </div>
   );
 }

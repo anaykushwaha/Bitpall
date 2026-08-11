@@ -16,6 +16,7 @@
     "@aegisscript/interpreter": "workspace:*",
     "@aegisscript/language-service": "workspace:*",
     "@aegisscript/parser": "workspace:*",
+    "@aegisscript/test-runner": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

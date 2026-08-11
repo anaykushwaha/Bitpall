@@ -24,6 +24,7 @@ rule_decl := 'rule' IDENT '{'
                respond_block?
                rollback_block?
              '}'
+# Semantic/parse rule: at most one observe, respond, and rollback each.
 
 observe_stage := 'observe' IDENT 'where' expression ';'
 then_stage    := 'then' IDENT 'where' expression 'within' DURATION ';'

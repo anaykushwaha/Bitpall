@@ -217,7 +217,30 @@ class Parser {
     while (!this.isAtEnd() && !this.checkPunctuation("}")) {
       const before = this.index;
       if (this.checkKeyword("observe")) {
-        observe = this.parseObserveStage();
+        const stage = this.parseObserveStage();
+        if (stage) {
+          if (observe) {
+            this.diagnostics.push(
+              createDiagnostic({
+                code: "AEGIS3011",
+                severity: "error",
+                message: `Rule '${name?.name ?? "<unknown>"}' already has an observe stage`,
+                fileName: this.fileName,
+                range: stage.range,
+                suggestion: "Keep only one observe stage per rule.",
+                related: [
+                  {
+                    fileName: this.fileName,
+                    range: observe.range,
+                    message: "Previous observe stage",
+                  },
+                ],
+              }),
+            );
+          } else {
+            observe = stage;
+          }
+        }
       } else if (this.checkKeyword("then")) {
         const stage = this.parseThenStage();
         if (stage) thenStages.push(stage);
@@ -225,9 +248,55 @@ class Parser {
         const req = this.parseRequireClause();
         if (req) requires.push(req);
       } else if (this.checkKeyword("respond")) {
-        respond = this.parseRespondBlock();
+        const block = this.parseRespondBlock();
+        if (block) {
+          if (respond) {
+            this.diagnostics.push(
+              createDiagnostic({
+                code: "AEGIS3011",
+                severity: "error",
+                message: `Rule '${name?.name ?? "<unknown>"}' already has a respond block`,
+                fileName: this.fileName,
+                range: block.range,
+                suggestion: "Keep only one respond block per rule.",
+                related: [
+                  {
+                    fileName: this.fileName,
+                    range: respond.range,
+                    message: "Previous respond block",
+                  },
+                ],
+              }),
+            );
+          } else {
+            respond = block;
+          }
+        }
       } else if (this.checkKeyword("rollback")) {
-        rollback = this.parseRollbackBlock();
+        const block = this.parseRollbackBlock();
+        if (block) {
+          if (rollback) {
+            this.diagnostics.push(
+              createDiagnostic({
+                code: "AEGIS3011",
+                severity: "error",
+                message: `Rule '${name?.name ?? "<unknown>"}' already has a rollback block`,
+                fileName: this.fileName,
+                range: block.range,
+                suggestion: "Keep only one rollback block per rule.",
+                related: [
+                  {
+                    fileName: this.fileName,
+                    range: rollback.range,
+                    message: "Previous rollback block",
+                  },
+                ],
+              }),
+            );
+          } else {
+            rollback = block;
+          }
+        }
       } else {
         this.error(
           this.peek(),

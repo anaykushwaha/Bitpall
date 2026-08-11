@@ -13,7 +13,9 @@ AST
   ↓
 checker
   ↓
-interpreter
+event validation + interpreter
+  ↓
+test-runner (optional)
   ↓
 runtime
   ↓
@@ -24,16 +26,17 @@ audit output
 
 Lower-level packages must not import higher-level packages.
 
-| Package            | May depend on                             |
-| ------------------ | ----------------------------------------- |
-| `ast`              | nothing in the compiler graph             |
-| `lexer`            | `ast`                                     |
-| `parser`           | `ast`, `lexer`                            |
-| `checker`          | `ast`                                     |
-| `runtime`          | `ast`                                     |
-| `interpreter`      | `ast`, `runtime`                          |
-| `language-service` | `ast`, `parser`, `checker`                |
-| `playground`       | language-service and interpreter packages |
+| Package            | May depend on                                  |
+| ------------------ | ---------------------------------------------- |
+| `ast`              | nothing in the compiler graph                  |
+| `lexer`            | `ast`                                          |
+| `parser`           | `ast`, `lexer`                                 |
+| `checker`          | `ast`                                          |
+| `runtime`          | (none currently; interface-only package)       |
+| `interpreter`      | `ast`, `runtime`                               |
+| `test-runner`      | `ast`, `interpreter`                           |
+| `language-service` | `ast`, `parser`, `checker`                     |
+| `playground`       | language-service, interpreter, and test-runner |
 
 ## Product naming
 

@@ -127,4 +127,19 @@ describe("parser", () => {
     expect(asset).toBeTruthy();
     expect(result.diagnostics.length).toBeGreaterThan(0);
   });
+
+  it("reports duplicate observe stages", () => {
+    const result = parse(
+      createSourceFile(
+        "dup.aegis",
+        `workspace w {
+  rule r {
+    observe a where process.name == "a";
+    observe b where process.name == "b";
+  }
+}`,
+      ),
+    );
+    expect(result.diagnostics.some((d) => d.code === "AEGIS3011")).toBe(true);
+  });
 });
