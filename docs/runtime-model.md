@@ -25,15 +25,15 @@ Each workspace collects `source` string values from its `telemetry` declarations
 ## Matching
 
 1. Sort events by timestamp ascending. Equal timestamps keep original input order.
-2. Find the first eligible event matching the `observe` stage.
-3. For each `then` stage, find a later unused eligible event that:
-   - matches the stage type and condition
-   - occurs at or after the previously matched stage timestamp
-   - occurs at or before `observeTime + within`
-4. Compute chain confidence as the **minimum** of matched event confidences. Missing confidence counts as `0`.
-5. Count distinct declared `source` values on the matched chain.
-6. Evaluate `require` clauses.
-7. If matched, propose response and rollback actions to the runtime executor.
+2. Collect eligible events whose `source` is declared for the workspace.
+3. Find all eligible events matching the `observe` stage.
+4. Try each observe candidate in chronological order until one produces a complete chain:
+   - For each `then` stage, find a later unused eligible event that matches type/condition, is at or after the previous match, and is at or before `observeTime + within`
+   - Compute chain confidence as the **minimum** of matched event confidences (missing = `0`)
+   - Count distinct declared `source` values on the matched chain
+   - Evaluate `require` clauses
+5. On the first complete success, propose response and rollback actions to the runtime executor.
+6. If no candidate succeeds, the rule does not match.
 
 ## Meaning of `within`
 

@@ -142,4 +142,39 @@ workspace w {
     const second = runAegisTests({ program, events: matchingEvents });
     expect(first).toEqual(second);
   });
+
+  it("resolves identical rule names independently across workspaces", () => {
+    const program = checked(`
+workspace production {
+  telemetry edr { source = "endpoint-agent"; }
+  rule suspicious_login {
+    observe process_start where process.name == "powershell.exe";
+  }
+  test t { expect rule suspicious_login to_match; }
+}
+workspace corporate {
+  telemetry edr { source = "endpoint-agent"; }
+  rule suspicious_login {
+    observe process_start where process.name == "other.exe";
+  }
+  test t { expect rule suspicious_login to_match; }
+}
+`);
+    const result = runAegisTests({ program, events: [matchingEvents[0]!] });
+    const production = result.tests.find((t) => t.workspaceName === "production");
+    const corporate = result.tests.find((t) => t.workspaceName === "corporate");
+    expect(production?.passed).toBe(true);
+    expect(corporate?.passed).toBe(false);
+    expect(result.passed).toBe(false);
+    expect(
+      result.interpretResult.ruleResults.find(
+        (r) => r.workspaceName === "production" && r.ruleName === "suspicious_login",
+      )?.matched,
+    ).toBe(true);
+    expect(
+      result.interpretResult.ruleResults.find(
+        (r) => r.workspaceName === "corporate" && r.ruleName === "suspicious_login",
+      )?.matched,
+    ).toBe(false);
+  });
 });

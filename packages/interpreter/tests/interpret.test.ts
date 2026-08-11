@@ -368,3 +368,106 @@ workspace corporate_network {
     expect(result.rollbackActions.some((a) => a.action.type === "reconnect_endpoint")).toBe(true);
   });
 });
+
+describe("interpreter observe candidate backtracking", () => {
+  const policy = `
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  rule chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+  }
+}
+`;
+
+  it("matches when the first observe candidate fails but a later candidate succeeds", () => {
+    const result = run(policy, [
+      {
+        id: "early-ps",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "late-ps",
+        type: "process_start",
+        timestamp: "2026-08-06T12:10:00.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "encrypt",
+        type: "file_write",
+        timestamp: "2026-08-06T12:11:00.000Z",
+        source: "file-monitor",
+        confidence: 1,
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.matchedEventIds).toEqual(["late-ps", "encrypt"]);
+    expect(result.trace.some((t) => /Trying observe candidate 'early-ps'/i.test(t.message))).toBe(
+      true,
+    );
+    expect(result.trace.some((t) => /Trying observe candidate 'late-ps'/i.test(t.message))).toBe(
+      true,
+    );
+  });
+
+  it("reports no match when every observe candidate fails", () => {
+    const result = run(policy, [
+      {
+        id: "ps-1",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "ps-2",
+        type: "process_start",
+        timestamp: "2026-08-06T12:05:00.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "encrypt-late",
+        type: "file_write",
+        timestamp: "2026-08-06T12:20:00.000Z",
+        source: "file-monitor",
+        confidence: 1,
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+    expect(result.ruleResults[0]?.reason).toMatch(/outside/i);
+  });
+
+  it("does not let a then-event before the selected observe candidate satisfy the rule", () => {
+    const result = run(policy, [
+      {
+        id: "encrypt-early",
+        type: "file_write",
+        timestamp: "2026-08-06T11:59:00.000Z",
+        source: "file-monitor",
+        confidence: 1,
+        properties: { file: { extension: ".encrypted" } },
+      },
+      {
+        id: "ps",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "powershell.exe" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+  });
+});

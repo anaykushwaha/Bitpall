@@ -22,6 +22,7 @@ export interface TraceEntry {
 }
 
 export interface RuleMatchResult {
+  readonly workspaceName: string;
   readonly ruleName: string;
   readonly matched: boolean;
   readonly reason: string;
@@ -41,6 +42,15 @@ export interface InterpretResult {
 
 export interface InterpretOptions {
   readonly executor?: ResponseExecutor;
+}
+
+interface ChainAttempt {
+  readonly matched: boolean;
+  readonly reason: string;
+  readonly chain: readonly MockSecurityEvent[];
+  readonly confidence: number;
+  readonly sources: number;
+  readonly attemptTrace: readonly TraceEntry[];
 }
 
 function compareRequirement(metricValue: number, clause: RequireClauseNode): boolean {
@@ -82,91 +92,33 @@ function isDeclaredTelemetry(
   return typeof event.source === "string" && allowedSources.has(event.source);
 }
 
-function evaluateRule(
-  workspace: WorkspaceDeclarationNode,
+/**
+ * Attempt to build a complete ordered chain starting from a specific observe event.
+ * Does not execute response actions.
+ */
+function tryChainFromObserve(
   rule: RuleDeclarationNode,
-  events: readonly MockSecurityEvent[],
-  allowedSources: ReadonlySet<string>,
-  executor: ResponseExecutor,
-  trace: TraceEntry[],
-): RuleMatchResult {
+  observeEvent: MockSecurityEvent,
+  eligible: readonly MockSecurityEvent[],
+): ChainAttempt {
   const ruleName = rule.name.name;
-  const workspaceName = workspace.name.name;
-
-  if (!rule.observe) {
-    return {
-      ruleName,
-      matched: false,
-      reason: "Rule has no observe stage",
-      matchedEventIds: [],
-      confidence: 0,
-      sources: 0,
-      responses: [],
-    };
-  }
-
-  const eligible = events.filter((event) => {
-    if (!isDeclaredTelemetry(event, allowedSources)) {
-      const relevantToObserve = eventMatchesTypeAndCondition(
-        event,
-        rule.observe!.eventType.name,
-        rule.observe!.condition,
-      );
-      const relevantToThen = rule.thenStages.some((stage) =>
-        eventMatchesTypeAndCondition(event, stage.eventType.name, stage.condition),
-      );
-      if (relevantToObserve || relevantToThen) {
-        trace.push({
-          timestamp: new Date(0).toISOString(),
-          ruleName,
-          message: `Ignored event '${event.id}' because source '${event.source ?? "<missing>"}' is not a declared telemetry source`,
-          eventIds: [event.id],
-        });
-      }
-      return false;
-    }
-    return true;
-  });
-
-  const observeMatches = eligible.filter((event) =>
-    eventMatchesTypeAndCondition(event, rule.observe!.eventType.name, rule.observe!.condition),
-  );
-
-  if (observeMatches.length === 0) {
-    trace.push({
-      timestamp: new Date(0).toISOString(),
-      ruleName,
-      message: "Observe stage did not match any events",
-    });
-    return {
-      ruleName,
-      matched: false,
-      reason: "Observe stage did not match",
-      matchedEventIds: [],
-      confidence: 0,
-      sources: 0,
-      responses: [],
-    };
-  }
-
-  const observeEvent = observeMatches[0]!;
   const observeTime = eventTimeMs(observeEvent);
   const chain: MockSecurityEvent[] = [observeEvent];
   let previousTime = observeTime;
-
-  trace.push({
-    timestamp: new Date(observeTime).toISOString(),
-    ruleName,
-    message: `Observe matched event '${observeEvent.id}' (${observeEvent.type})`,
-    eventIds: [observeEvent.id],
-  });
+  const attemptTrace: TraceEntry[] = [
+    {
+      timestamp: new Date(observeTime).toISOString(),
+      ruleName,
+      message: `Trying observe candidate '${observeEvent.id}' (${observeEvent.type})`,
+      eventIds: [observeEvent.id],
+    },
+  ];
 
   for (const thenStage of rule.thenStages) {
     const windowEnd = observeTime + thenStage.within.milliseconds;
     const thenMatch = eligible.find((event) => {
       if (chain.some((c) => c.id === event.id)) return false;
       const t = eventTimeMs(event);
-      // within is measured from observe; each stage must be at or after the previous match
       if (t < previousTime || t > windowEnd) return false;
       return eventMatchesTypeAndCondition(event, thenStage.eventType.name, thenStage.condition);
     });
@@ -189,25 +141,25 @@ function evaluateRule(
           reason = `Then stage '${thenStage.eventType.name}' condition did not match`;
         }
       }
-      trace.push({
+      attemptTrace.push({
         timestamp: new Date(0).toISOString(),
         ruleName,
-        message: reason,
+        message: `Observe candidate '${observeEvent.id}' failed: ${reason}`,
+        eventIds: [observeEvent.id],
       });
       return {
-        ruleName,
         matched: false,
         reason,
-        matchedEventIds: chain.map((e) => e.id),
+        chain,
         confidence: chainConfidence(chain),
         sources: countDistinctSources(chain),
-        responses: [],
+        attemptTrace,
       };
     }
 
     previousTime = eventTimeMs(thenMatch);
     chain.push(thenMatch);
-    trace.push({
+    attemptTrace.push({
       timestamp: new Date(previousTime).toISOString(),
       ruleName,
       message: `Then matched event '${thenMatch.id}' within ${thenStage.within.raw}`,
@@ -222,31 +174,49 @@ function evaluateRule(
     const value = req.metric === "confidence" ? confidence : sources;
     if (!compareRequirement(value, req)) {
       const reason = `Requirement failed: ${req.metric} ${req.operator} ${req.value.value} (actual ${value})`;
-      trace.push({
+      attemptTrace.push({
         timestamp: new Date(0).toISOString(),
         ruleName,
-        message: reason,
+        message: `Observe candidate '${observeEvent.id}' failed: ${reason}`,
         eventIds: chain.map((e) => e.id),
       });
       return {
-        ruleName,
         matched: false,
         reason,
-        matchedEventIds: chain.map((e) => e.id),
+        chain,
         confidence,
         sources,
-        responses: [],
+        attemptTrace,
       };
     }
   }
 
-  trace.push({
+  attemptTrace.push({
     timestamp: new Date(0).toISOString(),
     ruleName,
-    message: `Rule matched with confidence=${confidence}, sources=${sources}`,
+    message: `Observe candidate '${observeEvent.id}' produced a complete chain (confidence=${confidence}, sources=${sources})`,
     eventIds: chain.map((e) => e.id),
   });
 
+  return {
+    matched: true,
+    reason: "All stages and requirements satisfied",
+    chain,
+    confidence,
+    sources,
+    attemptTrace,
+  };
+}
+
+function executeResponses(
+  workspace: WorkspaceDeclarationNode,
+  rule: RuleDeclarationNode,
+  chain: readonly MockSecurityEvent[],
+  executor: ResponseExecutor,
+  trace: TraceEntry[],
+): ActionResult[] {
+  const ruleName = rule.name.name;
+  const workspaceName = workspace.name.name;
   const responses: ActionResult[] = [];
   const approvalGates = new Set<string>();
 
@@ -330,14 +300,124 @@ function evaluateRule(
     }
   }
 
-  return {
+  return responses;
+}
+
+function evaluateRule(
+  workspace: WorkspaceDeclarationNode,
+  rule: RuleDeclarationNode,
+  events: readonly MockSecurityEvent[],
+  allowedSources: ReadonlySet<string>,
+  executor: ResponseExecutor,
+  trace: TraceEntry[],
+): RuleMatchResult {
+  const ruleName = rule.name.name;
+  const workspaceName = workspace.name.name;
+
+  if (!rule.observe) {
+    return {
+      workspaceName,
+      ruleName,
+      matched: false,
+      reason: "Rule has no observe stage",
+      matchedEventIds: [],
+      confidence: 0,
+      sources: 0,
+      responses: [],
+    };
+  }
+
+  const eligible = events.filter((event) => {
+    if (!isDeclaredTelemetry(event, allowedSources)) {
+      const relevantToObserve = eventMatchesTypeAndCondition(
+        event,
+        rule.observe!.eventType.name,
+        rule.observe!.condition,
+      );
+      const relevantToThen = rule.thenStages.some((stage) =>
+        eventMatchesTypeAndCondition(event, stage.eventType.name, stage.condition),
+      );
+      if (relevantToObserve || relevantToThen) {
+        trace.push({
+          timestamp: new Date(0).toISOString(),
+          ruleName,
+          message: `Ignored event '${event.id}' because source '${event.source ?? "<missing>"}' is not a declared telemetry source`,
+          eventIds: [event.id],
+        });
+      }
+      return false;
+    }
+    return true;
+  });
+
+  const observeMatches = eligible.filter((event) =>
+    eventMatchesTypeAndCondition(event, rule.observe!.eventType.name, rule.observe!.condition),
+  );
+
+  if (observeMatches.length === 0) {
+    trace.push({
+      timestamp: new Date(0).toISOString(),
+      ruleName,
+      message: "Observe stage did not match any events",
+    });
+    return {
+      workspaceName,
+      ruleName,
+      matched: false,
+      reason: "Observe stage did not match",
+      matchedEventIds: [],
+      confidence: 0,
+      sources: 0,
+      responses: [],
+    };
+  }
+
+  let lastFailure: ChainAttempt | null = null;
+
+  // Deterministic: try observe candidates in chronological (already sorted) order.
+  for (const observeEvent of observeMatches) {
+    const attempt = tryChainFromObserve(rule, observeEvent, eligible);
+    trace.push(...attempt.attemptTrace);
+
+    if (attempt.matched) {
+      trace.push({
+        timestamp: new Date(0).toISOString(),
+        ruleName,
+        message: `Rule matched with confidence=${attempt.confidence}, sources=${attempt.sources}`,
+        eventIds: attempt.chain.map((e) => e.id),
+      });
+      const responses = executeResponses(workspace, rule, attempt.chain, executor, trace);
+      return {
+        workspaceName,
+        ruleName,
+        matched: true,
+        reason: attempt.reason,
+        matchedEventIds: attempt.chain.map((e) => e.id),
+        confidence: attempt.confidence,
+        sources: attempt.sources,
+        responses,
+      };
+    }
+
+    lastFailure = attempt;
+  }
+
+  const reason = lastFailure?.reason ?? "No observe candidate produced a complete chain";
+  trace.push({
+    timestamp: new Date(0).toISOString(),
     ruleName,
-    matched: true,
-    reason: "All stages and requirements satisfied",
-    matchedEventIds: chain.map((e) => e.id),
-    confidence,
-    sources,
-    responses,
+    message: `No observe candidate produced a complete chain; last failure: ${reason}`,
+  });
+
+  return {
+    workspaceName,
+    ruleName,
+    matched: false,
+    reason,
+    matchedEventIds: lastFailure?.chain.map((e) => e.id) ?? [],
+    confidence: lastFailure?.confidence ?? 0,
+    sources: lastFailure?.sources ?? 0,
+    responses: [],
   };
 }
 

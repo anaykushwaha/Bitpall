@@ -34,6 +34,11 @@ export interface TestRunResult {
   readonly interpretResult: InterpretResult;
 }
 
+/** Stable workspace-scoped rule identity for assertion lookup. */
+export function ruleIdentity(workspaceName: string, ruleName: string): string {
+  return `${workspaceName}::${ruleName}`;
+}
+
 /**
  * Execute AegisScript `test` declarations against validated mock events.
  * Runs the interpreter once, then evaluates `expect rule … to_match` assertions.
@@ -47,7 +52,7 @@ export function runAegisTests(request: TestRunRequest): TestRunResult {
 
   const matchedRules = new Map<string, boolean>();
   for (const result of interpretResult.ruleResults) {
-    matchedRules.set(result.ruleName, result.matched);
+    matchedRules.set(ruleIdentity(result.workspaceName, result.ruleName), result.matched);
   }
 
   const tests: TestCaseResult[] = [];
@@ -60,7 +65,8 @@ export function runAegisTests(request: TestRunRequest): TestRunResult {
       for (const statement of member.statements) {
         if (statement.kind !== "ExpectRuleMatch") continue;
         const ruleName = statement.ruleName.name;
-        const actual = matchedRules.get(ruleName) === true;
+        const key = ruleIdentity(workspace.name.name, ruleName);
+        const actual = matchedRules.get(key) === true;
         assertions.push({
           kind: "rule_match",
           ruleName,
@@ -68,8 +74,8 @@ export function runAegisTests(request: TestRunRequest): TestRunResult {
           actual,
           passed: actual,
           message: actual
-            ? `Rule '${ruleName}' matched as expected`
-            : `Expected rule '${ruleName}' to match, but it did not`,
+            ? `Rule '${workspace.name.name}::${ruleName}' matched as expected`
+            : `Expected rule '${workspace.name.name}::${ruleName}' to match, but it did not`,
         });
       }
 
