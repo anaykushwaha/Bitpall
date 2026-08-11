@@ -27,13 +27,14 @@ Each workspace collects `source` string values from its `telemetry` declarations
 1. Sort events by timestamp ascending. Equal timestamps keep original input order.
 2. Collect eligible events whose `source` is declared for the workspace.
 3. Find all eligible events matching the `observe` stage.
-4. Try each observe candidate in chronological order until one produces a complete chain:
-   - For each `then` stage, find a later unused eligible event that matches type/condition, is at or after the previous match, and is at or before `observeTime + within`
-   - Compute chain confidence as the **minimum** of matched event confidences (missing = `0`)
-   - Count distinct declared `source` values on the matched chain
-   - Evaluate `require` clauses
-5. On the first complete success, propose response and rollback actions to the runtime executor.
-6. If no candidate succeeds, the rule does not match.
+4. Try each observe candidate in chronological order. For each candidate, search `then` stages with backtracking:
+   - Collect all viable events for the current stage (type, condition, order, `within` from observe)
+   - Try each candidate earliest-first
+   - If a later stage or a `require` clause fails, backtrack to the next candidate
+   - Chain confidence is the **minimum** of matched event confidences (missing = `0`)
+   - Source count is distinct declared `source` values on the matched chain
+5. On the first complete success, emit a clean success trace and propose responses.
+6. If no candidate chain succeeds, the rule does not match.
 
 ## Meaning of `within`
 

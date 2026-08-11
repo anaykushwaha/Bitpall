@@ -4,16 +4,16 @@
 
 ## Status metadata
 
-| Field               | Value                                                                                                          |
-| ------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Project             | AegisScript                                                                                                    |
-| Current phase       | Correctness hardening complete — demo examples next                                                            |
-| Overall status      | PARTIAL                                                                                                        |
-| Last updated        | 2026-08-11                                                                                                     |
-| Current HEAD        | `0d6c07a0b7ae2c9b01fa104a821daf301d03f89a`                                                                     |
-| Uncommitted changes | Correctness fix pass (observe backtracking, workspace rule IDs, playground separation) — **not yet committed** |
-| Maintainer          | Project team                                                                                                   |
-| Current milestone   | Hackathon demo readiness                                                                                       |
+| Field               | Value                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| Project             | AegisScript                                                                                            |
+| Current phase       | Interpreter chain-search complete — demo examples next                                                 |
+| Overall status      | PARTIAL                                                                                                |
+| Last updated        | 2026-08-11                                                                                             |
+| Current HEAD        | `3831e62637cb776b808e50f173a92cf15c8ca497`                                                             |
+| Uncommitted changes | Then-stage event-chain backtracking (interpreter + tests + runtime-model docs) — **not yet committed** |
+| Maintainer          | Project team                                                                                           |
+| Current milestone   | Hackathon demo readiness                                                                               |
 
 ## Status legend
 
@@ -29,23 +29,23 @@
 
 ## Current project summary
 
-AegisScript has a hardened vertical slice suitable for demoing detection-to-response policies against mock events. The interpreter now backtracks across observe candidates, the test runner scopes rule identities by workspace, and the playground separates Check / Run Simulation / Run Tests. Responses remain simulation-only.
+AegisScript has a hardened vertical slice suitable for demoing detection-to-response policies against mock events. The interpreter performs deterministic ordered event-chain search with backtracking across observe candidates and every `then` stage, including when rule-level requirements fail for an otherwise temporal chain. The test runner scopes rule identities by workspace, and the playground separates Check / Run Simulation / Run Tests. Responses remain simulation-only and execute only after a complete successful chain.
 
 ## Phase roadmap
 
-| Phase    | Scope                                             | Status      | Completion criteria                                                                                            |
-| -------- | ------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
-| Phase 0  | Repository and workspace initialization           | COMPLETE    | Workspace installs successfully and root development commands are configured.                                  |
-| Phase 1  | Source model, diagnostics, AST, lexer, and parser | COMPLETE    | Supported example parses into a typed AST with useful diagnostics and passing tests.                           |
-| Phase 2  | Name resolution and semantic checker              | COMPLETE    | Semantic rules validated, including cross-kind duplicates and telemetry checks.                                |
-| Phase 3  | Mock event interpreter                            | COMPLETE    | Ordered multi-stage matching with observe-candidate backtracking, confidence, telemetry, and event validation. |
-| Phase 4  | Safe response runtime                             | COMPLETE    | Mock executor with approval and rollback metadata.                                                             |
-| Phase 5  | Test runner and ransomware example                | COMPLETE    | Workspace-scoped expectations; ransomware example integration covers the full pipeline.                        |
-| Phase 6  | Browser playground                                | PARTIAL     | Functional Check / Simulation / Tests; presentation polish and richer visualization remain.                    |
-| Phase 7  | Language-service foundation                       | PARTIAL     | `analyzeSource` wraps parse+check; full LSP is not implemented.                                                |
-| Phase 8  | Additional demo examples                          | NOT STARTED | Account-takeover and data-exfiltration examples fully implemented.                                             |
-| Phase 9  | Exporters                                         | NOT STARTED | At least one deterministic export format.                                                                      |
-| Phase 10 | Production adapters                               | DEFERRED    | Requires a separate security and architecture review.                                                          |
+| Phase    | Scope                                             | Status      | Completion criteria                                                                                   |
+| -------- | ------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
+| Phase 0  | Repository and workspace initialization           | COMPLETE    | Workspace installs successfully and root development commands are configured.                         |
+| Phase 1  | Source model, diagnostics, AST, lexer, and parser | COMPLETE    | Supported example parses into a typed AST with useful diagnostics and passing tests.                  |
+| Phase 2  | Name resolution and semantic checker              | COMPLETE    | Semantic rules validated, including cross-kind duplicates and telemetry checks.                       |
+| Phase 3  | Mock event interpreter                            | COMPLETE    | Complete for current hackathon/demo semantics: ordered chain search with observe + then backtracking. |
+| Phase 4  | Safe response runtime                             | COMPLETE    | Mock executor with approval and rollback metadata.                                                    |
+| Phase 5  | Test runner and ransomware example                | COMPLETE    | Workspace-scoped expectations; ransomware example integration covers the full pipeline.               |
+| Phase 6  | Browser playground                                | PARTIAL     | Functional Check / Simulation / Tests; presentation polish and richer visualization remain.           |
+| Phase 7  | Language-service foundation                       | PARTIAL     | `analyzeSource` wraps parse+check; full LSP is not implemented.                                       |
+| Phase 8  | Additional demo examples                          | NOT STARTED | Account-takeover and data-exfiltration examples fully implemented.                                    |
+| Phase 9  | Exporters                                         | NOT STARTED | At least one deterministic export format.                                                             |
+| Phase 10 | Production adapters                               | DEFERRED    | Requires a separate security and architecture review.                                                 |
 
 ## Implemented
 
@@ -53,7 +53,8 @@ AegisScript has a hardened vertical slice suitable for demoing detection-to-resp
 
 - Lexer, parser, AST, checker, interpreter, mock runtime, test-runner
 - Ordered multi-stage temporal matching (`within` from observe; chronological stage order)
-- Observe-candidate backtracking (later observe starts may succeed when earlier ones fail)
+- Deterministic event-chain search with backtracking across observe and `then` candidates
+- Requirement failures (`confidence`, `sources`) backtrack to other viable chains
 - Mock event validation (`validateMockEvents`)
 - Minimum-chain confidence (missing confidence = 0)
 - Telemetry-gated event eligibility
@@ -63,7 +64,7 @@ AegisScript has a hardened vertical slice suitable for demoing detection-to-resp
 
 ## Next recommended task
 
-**Implement the account-takeover end-to-end AegisScript example** under `examples/account-takeover/` (policy, events, expected result, README), with an integration test mirroring the ransomware coverage.
+**Implement the end-to-end account-takeover AegisScript example.**
 
 Hackathon priority order after that:
 
@@ -74,18 +75,18 @@ Hackathon priority order after that:
 
 ## Package status
 
-| Package or application      | Status      | Notes                                                 |
-| --------------------------- | ----------- | ----------------------------------------------------- |
-| `apps/playground`           | PARTIAL     | Functional; polish and visualization remaining        |
-| `packages/lexer`            | COMPLETE    | Tokenization and lexical diagnostics                  |
-| `packages/ast`              | COMPLETE    | Typed AST, diagnostics, product naming                |
-| `packages/parser`           | COMPLETE    | Recursive-descent parsing                             |
-| `packages/checker`          | COMPLETE    | Semantic validation                                   |
-| `packages/interpreter`      | COMPLETE    | Matching, confidence, telemetry, observe backtracking |
-| `packages/runtime`          | COMPLETE    | Mock response execution for demo scope                |
-| `packages/test-runner`      | COMPLETE    | Workspace-scoped `expect rule … to_match`             |
-| `packages/language-service` | PARTIAL     | Thin analyze facade                                   |
-| `packages/exporters`        | NOT STARTED | Scaffold only                                         |
+| Package or application      | Status                                        | Notes                                                                         |
+| --------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------- |
+| `apps/playground`           | PARTIAL                                       | Functional; polish and visualization remaining                                |
+| `packages/lexer`            | COMPLETE                                      | Tokenization and lexical diagnostics                                          |
+| `packages/ast`              | COMPLETE                                      | Typed AST, diagnostics, product naming                                        |
+| `packages/parser`           | COMPLETE                                      | Recursive-descent parsing                                                     |
+| `packages/checker`          | COMPLETE                                      | Semantic validation                                                           |
+| `packages/interpreter`      | COMPLETE for current hackathon/demo semantics | Chain search across observe/`then` stages; requirements part of chain success |
+| `packages/runtime`          | COMPLETE                                      | Mock response execution for demo scope                                        |
+| `packages/test-runner`      | COMPLETE                                      | Workspace-scoped `expect rule … to_match`                                     |
+| `packages/language-service` | PARTIAL                                       | Thin analyze facade                                                           |
+| `packages/exporters`        | NOT STARTED                                   | Scaffold only                                                                 |
 
 ## Example status
 
@@ -103,7 +104,7 @@ Hackathon priority order after that:
 | Formatting               | COMPLETE | 2026-08-11 | `pnpm format:check`                                           |
 | Linting                  | COMPLETE | 2026-08-11 | `pnpm lint`                                                   |
 | Type checking            | COMPLETE | 2026-08-11 | `pnpm check`                                                  |
-| Unit + integration tests | COMPLETE | 2026-08-11 | **91** tests passed                                           |
+| Unit + integration tests | COMPLETE | 2026-08-11 | **99** tests passed (12 files); 0 failed                      |
 | Production build         | COMPLETE | 2026-08-11 | Package tsc + playground Vite build                           |
 | Example runner           | COMPLETE | 2026-08-11 | `pnpm example:ransomware`                                     |
 | Playground launch        | PARTIAL  | 2026-08-11 | Build verified; interactive `pnpm dev` not smoke-tested in CI |
@@ -117,6 +118,7 @@ Hackathon priority order after that:
 - Soft keywords may appear in identifier positions.
 - The AegisScript name may change later.
 - No backwards-compatibility guarantee while experimental.
+- Interpreter matching is complete for current hackathon/demo semantics, not production SIEM-scale workloads.
 
 ## Language design consideration
 
@@ -161,6 +163,12 @@ Test assertions resolve rules as `workspaceName::ruleName` so identically named 
 
 Check validates only. Run Simulation calls the interpreter. Run Tests calls the test-runner. Simulation must not require DSL test declarations.
 
+### ADR-014: Then-stage event-chain backtracking
+
+**Status:** Accepted
+
+Matching searches viable ordered event chains rather than greedily committing to the first eligible `then` event. Candidates at every stage are tried in chronological order (input order as tie-breaker). Requirement failures and dead ends backtrack to the next candidate. Responses and the public success trace are emitted only for the first complete chain that satisfies all predicates, temporal constraints, and rule-level requirements. `within` remains measured from the observe event; stage ordering remains previous-stage time ≤ next-stage time.
+
 ## Technical debt
 
 ### TD-001: Package exports point at TypeScript sources
@@ -190,15 +198,21 @@ Check validates only. Run Simulation calls the interpreter. Run Tests calls the 
 
 ## Change log
 
-### 2026-08-11 (correctness fix pass)
+### 2026-08-11 (then-stage chain-search pass — uncommitted)
 
-- Interpreter now backtracks across observe candidates until a complete chain succeeds.
+- Interpreter searches then-stage candidates with recursive backtracking; requirement failures continue the search.
+- Public success trace and responses reflect only the selected successful chain.
+- Added regression tests for confidence/sources backtracking, multi-stage paths, ordering, within windows, determinism, and response gating.
+- Documented matching behaviour in `docs/runtime-model.md`.
+- Corrected stale status metadata that still described the prior observe-backtracking work as uncommitted after it landed in HEAD `3831e62`.
+
+### 2026-08-11 (correctness fix pass — committed as `3831e62`)
+
+- Interpreter backtracks across observe candidates until a complete chain succeeds.
 - Test runner uses workspace-scoped rule identities.
 - Playground Check / Run Simulation / Run Tests are separate operations with shared compile helpers.
 - Added regression tests for observe backtracking, cross-workspace rule names, and pipeline separation.
-- Updated recommended next task to account-takeover example (not exporters).
 - Recorded approval-syntax ambiguity as a language design consideration.
-- Verification: 91 tests passing on this uncommitted fix set; HEAD remains `0d6c07a0…` without these changes until committed.
 
 ### 2026-08-11 (semantics hardening)
 

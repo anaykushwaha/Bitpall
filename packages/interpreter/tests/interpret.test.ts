@@ -471,3 +471,342 @@ workspace w {
     expect(result.ruleResults[0]?.matched).toBe(false);
   });
 });
+
+describe("interpreter then-stage chain backtracking", () => {
+  const helper = `
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  telemetry net { source = "network-sensor"; }
+`;
+
+  it("backtracks when the first then candidate fails confidence but a later one passes", () => {
+    const policy = `${helper}
+  rule chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+    require confidence >= 0.80;
+  }
+}
+`;
+    const result = run(policy, [
+      {
+        id: "obs",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 0.95,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "low",
+        type: "file_write",
+        timestamp: "2026-08-06T12:00:30.000Z",
+        source: "file-monitor",
+        confidence: 0.4,
+        properties: { file: { extension: ".encrypted" } },
+      },
+      {
+        id: "high",
+        type: "file_write",
+        timestamp: "2026-08-06T12:01:00.000Z",
+        source: "file-monitor",
+        confidence: 0.95,
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.matchedEventIds).toEqual(["obs", "high"]);
+    expect(result.ruleResults[0]?.confidence).toBe(0.95);
+  });
+
+  it("backtracks when the first then candidate fails sources but a later chain passes", () => {
+    const policy = `${helper}
+  rule chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+    require sources >= 2;
+  }
+}
+`;
+    const result = run(policy, [
+      {
+        id: "obs",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "same-source",
+        type: "file_write",
+        timestamp: "2026-08-06T12:00:20.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { file: { extension: ".encrypted" } },
+      },
+      {
+        id: "other-source",
+        type: "file_write",
+        timestamp: "2026-08-06T12:00:40.000Z",
+        source: "file-monitor",
+        confidence: 1,
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.matchedEventIds).toEqual(["obs", "other-source"]);
+    expect(result.ruleResults[0]?.sources).toBe(2);
+  });
+
+  it("backtracks at an intermediate then stage when the earliest path fails requirements", () => {
+    // Earliest stage_b candidate A1 yields low confidence; later A2→B satisfies require.
+    const policy = `${helper}
+  rule chain {
+    observe stage_a where process.name == "a";
+    then stage_b where process.name == "b" within 5m;
+    then stage_c where process.name == "c" within 5m;
+    require confidence >= 0.80;
+  }
+}
+`;
+    const result = run(policy, [
+      {
+        id: "O",
+        type: "stage_a",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "a" } },
+      },
+      {
+        id: "A1",
+        type: "stage_b",
+        timestamp: "2026-08-06T12:00:30.000Z",
+        source: "file-monitor",
+        confidence: 0.3,
+        properties: { process: { name: "b" } },
+      },
+      {
+        id: "A2",
+        type: "stage_b",
+        timestamp: "2026-08-06T12:00:40.000Z",
+        source: "file-monitor",
+        confidence: 1,
+        properties: { process: { name: "b" } },
+      },
+      {
+        id: "B",
+        type: "stage_c",
+        timestamp: "2026-08-06T12:00:50.000Z",
+        source: "network-sensor",
+        confidence: 1,
+        properties: { process: { name: "c" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.matchedEventIds).toEqual(["O", "A2", "B"]);
+  });
+
+  it("reports no match when every possible chain fails", () => {
+    const policy = `${helper}
+  rule chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+    require confidence >= 0.80;
+  }
+}
+`;
+    const result = run(policy, [
+      {
+        id: "obs",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 0.95,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "low1",
+        type: "file_write",
+        timestamp: "2026-08-06T12:00:30.000Z",
+        source: "file-monitor",
+        confidence: 0.4,
+        properties: { file: { extension: ".encrypted" } },
+      },
+      {
+        id: "low2",
+        type: "file_write",
+        timestamp: "2026-08-06T12:01:00.000Z",
+        source: "file-monitor",
+        confidence: 0.5,
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+    expect(result.ruleResults[0]?.reason).toMatch(/confidence/i);
+  });
+
+  it("does not weaken ordering while searching then candidates", () => {
+    const policy = `${helper}
+  rule chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+  }
+}
+`;
+    const result = run(policy, [
+      {
+        id: "encrypt-before",
+        type: "file_write",
+        timestamp: "2026-08-06T11:59:30.000Z",
+        source: "file-monitor",
+        confidence: 1,
+        properties: { file: { extension: ".encrypted" } },
+      },
+      {
+        id: "obs",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "powershell.exe" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+  });
+
+  it("does not accept then candidates outside the within window while backtracking", () => {
+    const policy = `${helper}
+  rule chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+    require confidence >= 0.80;
+  }
+}
+`;
+    const result = run(policy, [
+      {
+        id: "obs",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 0.95,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "low-in-window",
+        type: "file_write",
+        timestamp: "2026-08-06T12:00:30.000Z",
+        source: "file-monitor",
+        confidence: 0.4,
+        properties: { file: { extension: ".encrypted" } },
+      },
+      {
+        id: "high-outside-window",
+        type: "file_write",
+        timestamp: "2026-08-06T12:05:00.000Z",
+        source: "file-monitor",
+        confidence: 0.95,
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(false);
+    expect(result.ruleResults[0]?.reason).toMatch(/confidence|outside/i);
+  });
+
+  it("selects the earliest complete successful chain deterministically", () => {
+    // Two fully valid chains: obs→early and obs→late. Prefer earliest then-candidate.
+    const policy = `${helper}
+  rule chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+  }
+}
+`;
+    const events = [
+      {
+        id: "obs",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 1,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "early",
+        type: "file_write",
+        timestamp: "2026-08-06T12:00:20.000Z",
+        source: "file-monitor",
+        confidence: 1,
+        properties: { file: { extension: ".encrypted" } },
+      },
+      {
+        id: "late",
+        type: "file_write",
+        timestamp: "2026-08-06T12:00:40.000Z",
+        source: "file-monitor",
+        confidence: 1,
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ];
+    const first = run(policy, events);
+    const second = run(policy, events);
+    expect(first.ruleResults[0]?.matchedEventIds).toEqual(["obs", "early"]);
+    expect(second.ruleResults[0]?.matchedEventIds).toEqual(["obs", "early"]);
+  });
+
+  it("does not execute responses for failed candidate chains", () => {
+    const policy = `
+workspace corporate_network {
+  asset endpoint finance_laptop { criticality = "high"; }
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  rule chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+    require confidence >= 0.80;
+    respond {
+      isolate endpoint finance_laptop;
+      preserve evidence;
+    }
+  }
+}
+`;
+    const result = run(policy, [
+      {
+        id: "obs",
+        type: "process_start",
+        timestamp: "2026-08-06T12:00:00.000Z",
+        source: "endpoint-agent",
+        confidence: 0.95,
+        properties: { process: { name: "powershell.exe" } },
+      },
+      {
+        id: "low",
+        type: "file_write",
+        timestamp: "2026-08-06T12:00:30.000Z",
+        source: "file-monitor",
+        confidence: 0.4,
+        properties: { file: { extension: ".encrypted" } },
+      },
+      {
+        id: "high",
+        type: "file_write",
+        timestamp: "2026-08-06T12:01:00.000Z",
+        source: "file-monitor",
+        confidence: 0.95,
+        properties: { file: { extension: ".encrypted" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.ruleResults[0]?.matchedEventIds).toEqual(["obs", "high"]);
+    expect(result.auditLog.filter((e) => e.result.action.type === "isolate_endpoint")).toHaveLength(
+      1,
+    );
+    expect(
+      result.auditLog.filter((e) => e.result.action.type === "preserve_evidence"),
+    ).toHaveLength(1);
+  });
+});

@@ -2,6 +2,7 @@ import type {
   ProgramNode,
   RequireClauseNode,
   RuleDeclarationNode,
+  ThenStageNode,
   WorkspaceDeclarationNode,
 } from "@aegisscript/ast";
 import {
@@ -50,7 +51,6 @@ interface ChainAttempt {
   readonly chain: readonly MockSecurityEvent[];
   readonly confidence: number;
   readonly sources: number;
-  readonly attemptTrace: readonly TraceEntry[];
 }
 
 function compareRequirement(metricValue: number, clause: RequireClauseNode): boolean {
@@ -92,120 +92,168 @@ function isDeclaredTelemetry(
   return typeof event.source === "string" && allowedSources.has(event.source);
 }
 
+function requirementsPass(
+  rule: RuleDeclarationNode,
+  chain: readonly MockSecurityEvent[],
+):
+  | { ok: true; confidence: number; sources: number }
+  | { ok: false; reason: string; confidence: number; sources: number } {
+  const confidence = chainConfidence(chain);
+  const sources = countDistinctSources(chain);
+  for (const req of rule.requires) {
+    const value = req.metric === "confidence" ? confidence : sources;
+    if (!compareRequirement(value, req)) {
+      return {
+        ok: false,
+        reason: `Requirement failed: ${req.metric} ${req.operator} ${req.value.value} (actual ${value})`,
+        confidence,
+        sources,
+      };
+    }
+  }
+  return { ok: true, confidence, sources };
+}
+
+function thenCandidates(
+  stage: ThenStageNode,
+  observeTime: number,
+  previousTime: number,
+  chain: readonly MockSecurityEvent[],
+  eligible: readonly MockSecurityEvent[],
+): MockSecurityEvent[] {
+  const windowEnd = observeTime + stage.within.milliseconds;
+  return eligible.filter((event) => {
+    if (chain.some((c) => c.id === event.id)) return false;
+    const t = eventTimeMs(event);
+    // within is measured from observe; each stage must be at or after the previous match
+    if (t < previousTime || t > windowEnd) return false;
+    return eventMatchesTypeAndCondition(event, stage.eventType.name, stage.condition);
+  });
+}
+
 /**
- * Attempt to build a complete ordered chain starting from a specific observe event.
- * Does not execute response actions.
+ * Depth-first search over then-stage candidates for a fixed observe event.
+ * Tries candidates in chronological order; first fully successful chain wins.
+ * Requirement failures backtrack to later candidates rather than failing the rule.
  */
-function tryChainFromObserve(
+function searchThenStages(
   rule: RuleDeclarationNode,
   observeEvent: MockSecurityEvent,
   eligible: readonly MockSecurityEvent[],
 ): ChainAttempt {
-  const ruleName = rule.name.name;
   const observeTime = eventTimeMs(observeEvent);
-  const chain: MockSecurityEvent[] = [observeEvent];
-  let previousTime = observeTime;
-  const attemptTrace: TraceEntry[] = [
-    {
-      timestamp: new Date(observeTime).toISOString(),
-      ruleName,
-      message: `Trying observe candidate '${observeEvent.id}' (${observeEvent.type})`,
-      eventIds: [observeEvent.id],
-    },
-  ];
+  let lastFailureReason = `No complete chain from observe candidate '${observeEvent.id}'`;
+  let lastFailureChain: readonly MockSecurityEvent[] = [observeEvent];
+  let lastFailureConfidence = chainConfidence([observeEvent]);
+  let lastFailureSources = countDistinctSources([observeEvent]);
 
-  for (const thenStage of rule.thenStages) {
-    const windowEnd = observeTime + thenStage.within.milliseconds;
-    const thenMatch = eligible.find((event) => {
-      if (chain.some((c) => c.id === event.id)) return false;
-      const t = eventTimeMs(event);
-      if (t < previousTime || t > windowEnd) return false;
-      return eventMatchesTypeAndCondition(event, thenStage.eventType.name, thenStage.condition);
-    });
+  function search(stageIndex: number, chain: readonly MockSecurityEvent[]): ChainAttempt | null {
+    if (stageIndex >= rule.thenStages.length) {
+      const req = requirementsPass(rule, chain);
+      if (req.ok) {
+        return {
+          matched: true,
+          reason: "All stages and requirements satisfied",
+          chain,
+          confidence: req.confidence,
+          sources: req.sources,
+        };
+      }
+      lastFailureReason = req.reason;
+      lastFailureChain = chain;
+      lastFailureConfidence = req.confidence;
+      lastFailureSources = req.sources;
+      return null;
+    }
 
-    if (!thenMatch) {
+    const stage = rule.thenStages[stageIndex]!;
+    const previousTime = eventTimeMs(chain[chain.length - 1]!);
+    const candidates = thenCandidates(stage, observeTime, previousTime, chain, eligible);
+
+    if (candidates.length === 0) {
       const typeMatch = eligible.find((event) => {
         if (chain.some((c) => c.id === event.id)) return false;
-        return eventMatchesTypeAndCondition(event, thenStage.eventType.name, thenStage.condition);
+        return eventMatchesTypeAndCondition(event, stage.eventType.name, stage.condition);
       });
       let reason: string;
       if (!typeMatch) {
-        reason = `Then stage '${thenStage.eventType.name}' condition did not match`;
+        reason = `Then stage '${stage.eventType.name}' condition did not match`;
       } else {
         const t = eventTimeMs(typeMatch);
+        const windowEnd = observeTime + stage.within.milliseconds;
         if (t < previousTime) {
-          reason = `Then stage '${thenStage.eventType.name}' occurred before the previous matched stage`;
+          reason = `Then stage '${stage.eventType.name}' occurred before the previous matched stage`;
         } else if (t > windowEnd) {
-          reason = `Then stage '${thenStage.eventType.name}' matched outside the ${thenStage.within.raw} window`;
+          reason = `Then stage '${stage.eventType.name}' matched outside the ${stage.within.raw} window`;
         } else {
-          reason = `Then stage '${thenStage.eventType.name}' condition did not match`;
+          reason = `Then stage '${stage.eventType.name}' condition did not match`;
         }
       }
-      attemptTrace.push({
-        timestamp: new Date(0).toISOString(),
-        ruleName,
-        message: `Observe candidate '${observeEvent.id}' failed: ${reason}`,
-        eventIds: [observeEvent.id],
-      });
-      return {
-        matched: false,
-        reason,
-        chain,
-        confidence: chainConfidence(chain),
-        sources: countDistinctSources(chain),
-        attemptTrace,
-      };
+      lastFailureReason = reason;
+      lastFailureChain = chain;
+      lastFailureConfidence = chainConfidence(chain);
+      lastFailureSources = countDistinctSources(chain);
+      return null;
     }
 
-    previousTime = eventTimeMs(thenMatch);
-    chain.push(thenMatch);
-    attemptTrace.push({
-      timestamp: new Date(previousTime).toISOString(),
+    for (const candidate of candidates) {
+      const found = search(stageIndex + 1, [...chain, candidate]);
+      if (found) {
+        return found;
+      }
+    }
+    return null;
+  }
+
+  const found = search(0, [observeEvent]);
+  if (found) {
+    return found;
+  }
+
+  return {
+    matched: false,
+    reason: lastFailureReason,
+    chain: lastFailureChain,
+    confidence: lastFailureConfidence,
+    sources: lastFailureSources,
+  };
+}
+
+function buildSuccessTrace(
+  ruleName: string,
+  rule: RuleDeclarationNode,
+  chain: readonly MockSecurityEvent[],
+  confidence: number,
+  sources: number,
+): TraceEntry[] {
+  const entries: TraceEntry[] = [];
+  const observeEvent = chain[0]!;
+  entries.push({
+    timestamp: new Date(eventTimeMs(observeEvent)).toISOString(),
+    ruleName,
+    message: `Observe matched event '${observeEvent.id}' (${observeEvent.type})`,
+    eventIds: [observeEvent.id],
+  });
+
+  for (let i = 0; i < rule.thenStages.length; i += 1) {
+    const stage = rule.thenStages[i]!;
+    const event = chain[i + 1]!;
+    entries.push({
+      timestamp: new Date(eventTimeMs(event)).toISOString(),
       ruleName,
-      message: `Then matched event '${thenMatch.id}' within ${thenStage.within.raw}`,
-      eventIds: [thenMatch.id],
+      message: `Then matched event '${event.id}' within ${stage.within.raw}`,
+      eventIds: [event.id],
     });
   }
 
-  const confidence = chainConfidence(chain);
-  const sources = countDistinctSources(chain);
-
-  for (const req of rule.requires) {
-    const value = req.metric === "confidence" ? confidence : sources;
-    if (!compareRequirement(value, req)) {
-      const reason = `Requirement failed: ${req.metric} ${req.operator} ${req.value.value} (actual ${value})`;
-      attemptTrace.push({
-        timestamp: new Date(0).toISOString(),
-        ruleName,
-        message: `Observe candidate '${observeEvent.id}' failed: ${reason}`,
-        eventIds: chain.map((e) => e.id),
-      });
-      return {
-        matched: false,
-        reason,
-        chain,
-        confidence,
-        sources,
-        attemptTrace,
-      };
-    }
-  }
-
-  attemptTrace.push({
+  entries.push({
     timestamp: new Date(0).toISOString(),
     ruleName,
-    message: `Observe candidate '${observeEvent.id}' produced a complete chain (confidence=${confidence}, sources=${sources})`,
+    message: `Rule matched with confidence=${confidence}, sources=${sources}`,
     eventIds: chain.map((e) => e.id),
   });
 
-  return {
-    matched: true,
-    reason: "All stages and requirements satisfied",
-    chain,
-    confidence,
-    sources,
-    attemptTrace,
-  };
+  return entries;
 }
 
 function executeResponses(
@@ -374,18 +422,21 @@ function evaluateRule(
 
   let lastFailure: ChainAttempt | null = null;
 
-  // Deterministic: try observe candidates in chronological (already sorted) order.
+  // Deterministic: try observe candidates earliest-first; within each, try then candidates earliest-first.
   for (const observeEvent of observeMatches) {
-    const attempt = tryChainFromObserve(rule, observeEvent, eligible);
-    trace.push(...attempt.attemptTrace);
+    trace.push({
+      timestamp: new Date(eventTimeMs(observeEvent)).toISOString(),
+      ruleName,
+      message: `Trying observe candidate '${observeEvent.id}' (${observeEvent.type})`,
+      eventIds: [observeEvent.id],
+    });
+
+    const attempt = searchThenStages(rule, observeEvent, eligible);
 
     if (attempt.matched) {
-      trace.push({
-        timestamp: new Date(0).toISOString(),
-        ruleName,
-        message: `Rule matched with confidence=${attempt.confidence}, sources=${attempt.sources}`,
-        eventIds: attempt.chain.map((e) => e.id),
-      });
+      trace.push(
+        ...buildSuccessTrace(ruleName, rule, attempt.chain, attempt.confidence, attempt.sources),
+      );
       const responses = executeResponses(workspace, rule, attempt.chain, executor, trace);
       return {
         workspaceName,
@@ -399,6 +450,12 @@ function evaluateRule(
       };
     }
 
+    trace.push({
+      timestamp: new Date(0).toISOString(),
+      ruleName,
+      message: `Observe candidate '${observeEvent.id}' failed: ${attempt.reason}`,
+      eventIds: [observeEvent.id],
+    });
     lastFailure = attempt;
   }
 
