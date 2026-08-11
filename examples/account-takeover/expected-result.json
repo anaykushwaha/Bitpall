@@ -1,0 +1,44 @@
+{
+  "matchedRules": ["account_takeover_chain"],
+  "confidence": 0.85,
+  "sources": 3,
+  "matchedEventIds": ["ato-1", "ato-2", "ato-3"],
+  "testsPassed": true,
+  "tests": [
+    {
+      "testName": "takeover_sequence",
+      "passed": true,
+      "assertions": [
+        {
+          "ruleName": "account_takeover_chain",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "simulatedActions": [
+    {
+      "type": "revoke_sessions",
+      "target": "finance_analyst",
+      "status": "simulated"
+    },
+    {
+      "type": "preserve_evidence",
+      "status": "simulated"
+    }
+  ],
+  "pendingApprovals": [
+    {
+      "type": "disable_account",
+      "target": "finance_analyst",
+      "status": "pending_approval"
+    }
+  ],
+  "rollbackActions": [
+    {
+      "type": "reenable_account",
+      "target": "finance_analyst",
+      "status": "recorded_rollback"
+    }
+  ]
+}

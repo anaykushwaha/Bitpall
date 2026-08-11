@@ -31,13 +31,17 @@ then_stage    := 'then' IDENT 'where' expression 'within' DURATION ';'
 require_clause := 'require' ('confidence' | 'sources') compare_op NUMBER ';'
 
 respond_block := 'respond' '{' respond_stmt* '}'
-respond_stmt  := isolate_stmt | preserve_stmt | approval_stmt
+respond_stmt  := isolate_stmt | preserve_stmt | revoke_sessions_stmt | disable_account_stmt | approval_stmt
 isolate_stmt  := 'isolate' 'endpoint' IDENT ';'
 preserve_stmt := 'preserve' 'evidence' ';'
+revoke_sessions_stmt := 'revoke' 'sessions' 'user' IDENT ';'
+disable_account_stmt := 'disable' 'account' IDENT ';'
 approval_stmt := 'approval' 'required' 'for' IDENT ';'
 
 rollback_block := 'rollback' '{' rollback_stmt* '}'
-rollback_stmt  := 'reconnect' 'endpoint' IDENT ';'
+rollback_stmt  := reconnect_stmt | reenable_account_stmt
+reconnect_stmt := 'reconnect' 'endpoint' IDENT ';'
+reenable_account_stmt := 'reenable' 'account' IDENT ';'
 
 test_decl := 'test' IDENT '{' expect_stmt* '}'
 expect_stmt := 'expect' 'rule' IDENT 'to_match' ';'

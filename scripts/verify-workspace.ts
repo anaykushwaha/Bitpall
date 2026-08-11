@@ -13,6 +13,8 @@ const required = [
   "packages/runtime/package.json",
   "apps/playground/package.json",
   "examples/exploit-to-ransomware/policy.aegis",
+  "examples/account-takeover/policy.aegis",
+  "examples/data-exfiltration/policy.aegis",
   "PROJECT_STATUS.md",
 ];
 

@@ -1,0 +1,47 @@
+workspace data_protection {
+  asset endpoint research_workstation {
+    criticality = "high";
+  }
+
+  telemetry dlp {
+    source = "dlp-agent";
+  }
+
+  telemetry filesystem {
+    source = "file-monitor";
+  }
+
+  telemetry network {
+    source = "network-sensor";
+  }
+
+  rule sensitive_exfiltration_chain {
+    observe file_access
+      where file.sensitivity == "confidential";
+
+    then file_archive
+      where file.operation == "bulk_stage"
+      within 15m;
+
+    then network_transfer
+      where network.direction == "outbound" and network.bytes_class == "large"
+      within 30m;
+
+    require confidence >= 0.80;
+    require sources >= 2;
+
+    respond {
+      isolate endpoint research_workstation;
+      preserve evidence;
+      approval required for terminate_process;
+    }
+
+    rollback {
+      reconnect endpoint research_workstation;
+    }
+  }
+
+  test exfiltration_sequence {
+    expect rule sensitive_exfiltration_chain to_match;
+  }
+}

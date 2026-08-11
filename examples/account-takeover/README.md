@@ -1,5 +1,32 @@
-# Account takeover (planned)
+# Account takeover
 
-This example directory is a placeholder for a future AegisScript scenario covering suspicious authentication, session anomalies, and approval-gated account containment.
+Detects a multi-stage identity compromise chain and simulates identity containment.
 
-It is **not implemented** in the initial vertical slice. Do not treat files here as a working demonstration until `PROJECT_STATUS.md` marks the scenario complete.
+## Story
+
+1. Unusual successful login for `finance_analyst`
+2. MFA failures shortly afterward
+3. Privileged role grant within the detection window
+4. Confidence and multi-source requirements pass
+5. Sessions are revoked and evidence is preserved (simulated)
+6. Account disablement remains pending approval
+7. Re-enable account is recorded as rollback metadata
+
+## Run
+
+```bash
+pnpm example:account-takeover
+```
+
+## Fixtures
+
+| File                         | Purpose                                      |
+| ---------------------------- | -------------------------------------------- |
+| `events.json`                | Positive match                               |
+| `events-benign.json`         | Normal login — no match                      |
+| `events-outside-window.json` | MFA outside `within 10m` — no match          |
+| `events-low-confidence.json` | Chain exists but confidence fails — no match |
+
+## Safety
+
+All responses are simulated. No identity provider, directory, or MFA system is contacted.

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "benign-1",
+    "type": "successful_login",
+    "timestamp": "2026-08-06T09:00:00.000Z",
+    "source": "identity-provider",
+    "confidence": 0.95,
+    "properties": {
+      "login": { "risk": "normal", "geo": "HQ" },
+      "user": { "name": "finance_analyst" }
+    }
+  },
+  {
+    "id": "benign-2",
+    "type": "mfa_success",
+    "timestamp": "2026-08-06T09:00:20.000Z",
+    "source": "mfa-service",
+    "confidence": 0.95,
+    "properties": {
+      "user": { "name": "finance_analyst" },
+      "auth": { "method": "totp" }
+    }
+  }
+]

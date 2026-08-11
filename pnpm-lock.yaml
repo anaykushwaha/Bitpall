@@ -68,6 +68,9 @@ importers:
       "@aegisscript/parser":
         specifier: workspace:*
         version: link:../../packages/parser
+      "@aegisscript/runtime":
+        specifier: workspace:*
+        version: link:../../packages/runtime
       "@aegisscript/test-runner":
         specifier: workspace:*
         version: link:../../packages/test-runner

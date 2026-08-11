@@ -8,6 +8,8 @@ The only response executor in this phase is `MockResponseExecutor`. It records i
 
 Actions marked with `approval required for ...` are stored as `pending_approval` and are not marked executed.
 
+High-impact identity disablement (`disable_account`) is always pending approval in the mock runtime, even when written as `disable account <asset>;`.
+
 ## Protected resources
 
 Protected-resource syntax is not implemented yet. Until it exists, policies should treat all real systems as out of bounds for execution.

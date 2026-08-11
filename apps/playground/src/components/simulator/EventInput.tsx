@@ -7,9 +7,9 @@ interface EventInputProps {
 export function EventInput({ value, onChange, error }: EventInputProps) {
   return (
     <section className="panel">
-      <h2>Mock events (JSON)</h2>
+      <h2>Security event stream</h2>
       <textarea
-        aria-label="Mock security events JSON"
+        aria-label="Security event stream JSON"
         rows={14}
         value={value}
         onChange={(event) => onChange(event.target.value)}

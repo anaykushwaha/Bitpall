@@ -78,6 +78,40 @@ describe("parser", () => {
     }
   });
 
+  it("parses identity response and rollback actions", () => {
+    const result = parse(
+      createSourceFile(
+        "identity.aegis",
+        `workspace identity_ops {
+  asset user finance_analyst { criticality = "high"; }
+  telemetry idp { source = "identity-provider"; }
+  rule takeover {
+    observe successful_login where user.name == "finance_analyst";
+    respond {
+      revoke sessions user finance_analyst;
+      preserve evidence;
+      disable account finance_analyst;
+    }
+    rollback {
+      reenable account finance_analyst;
+    }
+  }
+}`,
+      ),
+    );
+    expect(result.diagnostics.filter((d) => d.severity === "error")).toEqual([]);
+    const rule = result.program?.workspaces[0]?.members.find((m) => m.kind === "RuleDeclaration");
+    expect(rule?.kind).toBe("RuleDeclaration");
+    if (rule?.kind === "RuleDeclaration") {
+      expect(rule.respond?.statements.map((s) => s.kind)).toEqual([
+        "RevokeSessionsAction",
+        "PreserveEvidenceAction",
+        "DisableAccountAction",
+      ]);
+      expect(rule.rollback?.statements.map((s) => s.kind)).toEqual(["ReenableAccountAction"]);
+    }
+  });
+
   it("parses tests", () => {
     const result = parse(createSourceFile("policy.aegis", EXAMPLE));
     const test = result.program?.workspaces[0]?.members.find((m) => m.kind === "TestDeclaration");

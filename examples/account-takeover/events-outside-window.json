@@ -1,0 +1,35 @@
+[
+  {
+    "id": "late-1",
+    "type": "successful_login",
+    "timestamp": "2026-08-06T09:00:00.000Z",
+    "source": "identity-provider",
+    "confidence": 0.9,
+    "properties": {
+      "login": { "risk": "unusual", "geo": "Unknown ASN" },
+      "user": { "name": "finance_analyst" }
+    }
+  },
+  {
+    "id": "late-2",
+    "type": "mfa_failure",
+    "timestamp": "2026-08-06T09:25:00.000Z",
+    "source": "mfa-service",
+    "confidence": 0.85,
+    "properties": {
+      "user": { "name": "finance_analyst" },
+      "auth": { "method": "totp", "attempts": 4 }
+    }
+  },
+  {
+    "id": "late-3",
+    "type": "privilege_change",
+    "timestamp": "2026-08-06T09:40:00.000Z",
+    "source": "directory-audit",
+    "confidence": 0.88,
+    "properties": {
+      "user": { "name": "finance_analyst" },
+      "privilege": { "action": "role_grant", "role": "payroll_admin" }
+    }
+  }
+]

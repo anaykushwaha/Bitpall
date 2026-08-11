@@ -16,6 +16,8 @@
     "format:check": "prettier --check .",
     "dev": "pnpm --filter @aegisscript/playground dev",
     "example:ransomware": "tsx scripts/run-example.ts examples/exploit-to-ransomware",
+    "example:account-takeover": "tsx scripts/run-example.ts examples/account-takeover",
+    "example:data-exfiltration": "tsx scripts/run-example.ts examples/data-exfiltration",
     "verify": "tsx scripts/verify-workspace.ts"
   },
   "devDependencies": {

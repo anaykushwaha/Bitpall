@@ -1,0 +1,42 @@
+[
+  {
+    "id": "exfil-1",
+    "type": "file_access",
+    "timestamp": "2026-08-06T14:00:00.000Z",
+    "source": "dlp-agent",
+    "confidence": 0.91,
+    "properties": {
+      "file": {
+        "sensitivity": "confidential",
+        "path": "/shares/research/prototype-specs.pdf"
+      }
+    }
+  },
+  {
+    "id": "exfil-2",
+    "type": "file_archive",
+    "timestamp": "2026-08-06T14:08:00.000Z",
+    "source": "file-monitor",
+    "confidence": 0.86,
+    "properties": {
+      "file": {
+        "operation": "bulk_stage",
+        "path": "/tmp/research_bundle.zip"
+      }
+    }
+  },
+  {
+    "id": "exfil-3",
+    "type": "network_transfer",
+    "timestamp": "2026-08-06T14:18:00.000Z",
+    "source": "network-sensor",
+    "confidence": 0.84,
+    "properties": {
+      "network": {
+        "direction": "outbound",
+        "bytes_class": "large",
+        "destination": "203.0.113.50"
+      }
+    }
+  }
+]

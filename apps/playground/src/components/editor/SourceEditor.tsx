@@ -6,9 +6,9 @@ interface SourceEditorProps {
 export function SourceEditor({ value, onChange }: SourceEditorProps) {
   return (
     <section className="panel">
-      <h2>Source</h2>
+      <h2>AegisScript policy</h2>
       <textarea
-        aria-label="AegisScript source"
+        aria-label="AegisScript policy"
         rows={22}
         value={value}
         onChange={(event) => onChange(event.target.value)}

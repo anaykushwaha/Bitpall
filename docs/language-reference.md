@@ -69,15 +69,18 @@ Supported statements:
 
 - `isolate endpoint <asset>;` — simulated
 - `preserve evidence;` — simulated
+- `revoke sessions user <asset>;` — simulated identity containment
+- `disable account <asset>;` — always pending approval (simulation only)
 - `approval required for <action>;` — records a pending action
 
-Supported approval action name in the initial slice: `terminate_process`.
+Supported approval action names include `terminate_process` and `disable_account`.
 
 ## `rollback`
 
-Supported statement:
+Supported statements:
 
 - `reconnect endpoint <asset>;` — recorded as rollback metadata only
+- `reenable account <asset>;` — recorded as rollback metadata only
 
 ## `test`
 

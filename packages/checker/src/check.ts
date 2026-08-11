@@ -19,6 +19,8 @@ const SUPPORTED_RESPONSE_ACTIONS = new Set([
   "isolate_endpoint",
   "preserve_evidence",
   "terminate_process",
+  "revoke_sessions",
+  "disable_account",
 ]);
 
 export function check(program: ProgramNode, source: SourceFile): CheckResult {
@@ -247,7 +249,11 @@ function checkRule(
 
   if (rule.respond) {
     for (const statement of rule.respond.statements) {
-      if (statement.kind === "IsolateAction") {
+      if (
+        statement.kind === "IsolateAction" ||
+        statement.kind === "RevokeSessionsAction" ||
+        statement.kind === "DisableAccountAction"
+      ) {
         if (!assets.has(statement.target.name)) {
           diagnostics.push(
             createDiagnostic({
@@ -278,7 +284,10 @@ function checkRule(
 
   if (rule.rollback) {
     for (const statement of rule.rollback.statements) {
-      if (statement.kind === "ReconnectAction" && !assets.has(statement.target.name)) {
+      if (
+        (statement.kind === "ReconnectAction" || statement.kind === "ReenableAccountAction") &&
+        !assets.has(statement.target.name)
+      ) {
         diagnostics.push(
           createDiagnostic({
             code: "AEGIS3002",

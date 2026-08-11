@@ -7,23 +7,14 @@ interface TracePanelProps {
 export function TracePanel({ result }: TracePanelProps) {
   return (
     <section className="panel">
-      <h2>Execution trace</h2>
+      <h2>Detection trace</h2>
       {!result ? (
-        <p className="muted">Run Simulation to see the trace.</p>
+        <p className="muted">Run Simulation to see the detailed interpreter trace.</p>
       ) : (
-        <>
-          <ul>
-            {result.ruleResults.map((rule) => (
-              <li key={rule.ruleName}>
-                <strong>{rule.matched ? "MATCH" : "NO MATCH"}</strong> {rule.ruleName}:{" "}
-                {rule.reason}
-              </li>
-            ))}
-          </ul>
-          <pre>
-            {result.trace.map((entry) => `[${entry.ruleName}] ${entry.message}`).join("\n")}
-          </pre>
-        </>
+        <pre className="trace">
+          {result.trace.map((entry) => `[${entry.ruleName}] ${entry.message}`).join("\n") ||
+            "No trace entries."}
+        </pre>
       )}
     </section>
   );

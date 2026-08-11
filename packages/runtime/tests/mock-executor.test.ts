@@ -53,4 +53,48 @@ describe("MockResponseExecutor", () => {
     expect(result.status).toBe("recorded_rollback");
     expect(executor.getRollbackActions()).toHaveLength(1);
   });
+
+  it("records simulated session revocation", () => {
+    const executor = new MockResponseExecutor();
+    const result = executor.execute(
+      {
+        type: "revoke_sessions",
+        target: "finance_analyst",
+        ruleName: context.ruleName,
+        workspaceName: context.workspaceName,
+      },
+      context,
+    );
+    expect(result.status).toBe("simulated");
+  });
+
+  it("keeps account disablement pending approval", () => {
+    const executor = new MockResponseExecutor();
+    const result = executor.execute(
+      {
+        type: "disable_account",
+        target: "finance_analyst",
+        ruleName: context.ruleName,
+        workspaceName: context.workspaceName,
+      },
+      context,
+    );
+    expect(result.status).toBe("pending_approval");
+    expect(executor.getPendingApprovals()).toHaveLength(1);
+  });
+
+  it("records account reenable as rollback metadata", () => {
+    const executor = new MockResponseExecutor();
+    const result = executor.execute(
+      {
+        type: "reenable_account",
+        target: "finance_analyst",
+        ruleName: context.ruleName,
+        workspaceName: context.workspaceName,
+      },
+      context,
+    );
+    expect(result.status).toBe("recorded_rollback");
+    expect(executor.getRollbackActions()).toHaveLength(1);
+  });
 });

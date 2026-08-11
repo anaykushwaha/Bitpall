@@ -1,86 +1,91 @@
 # AegisScript
 
-AegisScript is an experimental defensive cybersecurity domain-specific language. Security teams can describe suspicious behaviour, required evidence, temporal relationships, confidence thresholds, and safe containment responses in one readable policy.
+Security automation is often split across vendor-specific rule formats, scripts, and response APIs. **AegisScript** explores a safer declarative language for expressing multi-stage detection and response workflows with explicit evidence, confidence, approval, rollback, and testing semantics.
 
-> **Safety:** AegisScript does not execute real security actions in this repository. All response actions are simulated through a mock executor. Real EDR, SIEM, identity, and network integrations are not implemented.
+> **Safety:** All responses in this repository are simulated. AegisScript does not disable real users, isolate real machines, terminate real processes, revoke real sessions, or block real network traffic.
 
-## Problem
+## What problem does it solve?
 
-Detection content and response playbooks are often split across vendor consoles, ticket templates, and ad-hoc scripts. That makes it hard to:
+Detection content and response playbooks are usually scattered across consoles, tickets, and ad-hoc scripts. That makes it hard to:
 
-- express multi-stage attack sequences with explicit timing
-- require evidence before acting
+- express ordered attack sequences with timing windows
+- require confidence and multi-source evidence before acting
 - keep approval gates and rollback steps next to the detection logic
 - replay deterministic security tests
 
-A small DSL keeps those concerns together and reviewable.
+## What is AegisScript?
 
-## Current maturity
+AegisScript is an experimental defensive cybersecurity DSL. Policies describe:
 
-This repository contains an end-to-end vertical slice:
+1. what to observe
+2. which follow-on events must occur
+3. evidence thresholds
+4. simulated containment responses
+5. approval-gated high-impact actions
+6. rollback metadata
+7. executable `test` expectations
 
-1. Lex
-2. Parse
-3. Semantic check
-4. Validate mock events
-5. Interpret against mock events
-6. Execute policy `test` expectations
-7. Record simulated responses
-8. Inspect results in a browser playground
+## Why a DSL?
 
-See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for exact completion status. Do not assume unimplemented packages are production-ready.
+A small domain language keeps detection, evidence, and response reviewable in one place—without binding the prototype to a single vendor API.
 
-## Monorepo overview
+## What the demo shows
 
-| Path                        | Role                                                  |
-| --------------------------- | ----------------------------------------------------- |
-| `packages/lexer`            | Tokenization                                          |
-| `packages/ast`              | Typed AST, source ranges, diagnostics, product naming |
-| `packages/parser`           | Recursive-descent parser                              |
-| `packages/checker`          | Semantic validation                                   |
-| `packages/interpreter`      | Mock-event rule evaluation                            |
-| `packages/runtime`          | Mock response executor and audit log                  |
-| `packages/language-service` | Thin analyze API for editors/UI                       |
-| `packages/test-runner`      | Replay `test` / `expect rule … to_match`              |
-| `packages/exporters`        | Scaffold only                                         |
-| `apps/playground`           | Browser editor and simulator                          |
-| `examples/`                 | Working and planned scenarios                         |
+Three end-to-end scenarios on the same language and mock runtime:
 
-## Installation
+| Example                  | What it demonstrates                                                     |
+| ------------------------ | ------------------------------------------------------------------------ |
+| **Exploit → Ransomware** | Ordered process/encryption chain with endpoint isolation                 |
+| **Account Takeover**     | Suspicious identity chain with session revoke + pending account disable  |
+| **Data Exfiltration**    | Sensitive access → staging → outbound transfer with endpoint containment |
+
+Open the playground, switch scenarios, run simulation, and inspect detection / event chain / response plan.
+
+## How do I run it?
 
 Requires Node.js 20+ and pnpm 9+.
 
 ```bash
 pnpm install
-```
-
-## Development commands
-
-```bash
-pnpm check              # Typecheck all packages
-pnpm test               # Unit + integration tests
-pnpm lint               # ESLint
-pnpm format             # Prettier write
-pnpm format:check       # Prettier check
-pnpm build              # Build packages and playground
-pnpm dev                # Start playground
-pnpm example:ransomware # Run the ransomware example
-pnpm verify             # Verify required workspace files exist
-```
-
-## Run the ransomware example
-
-```bash
+pnpm test
+pnpm build
+pnpm dev                 # playground at http://localhost:5173
 pnpm example:ransomware
+pnpm example:account-takeover
+pnpm example:data-exfiltration
 ```
 
-## Open the playground
+## Architecture
 
-```bash
-pnpm dev
+```text
+AegisScript source
+        ↓
+      Lexer
+        ↓
+      Parser
+        ↓
+       AST
+        ↓
+ Semantic checker
+        ↓
+    Interpreter  →  Mock runtime  →  Audit / responses
+        ↓
+   Test runner (expect rule … to_match)
 ```
 
-Then open the local Vite URL (default `http://localhost:5173`).
+| Path                        | Role                                            |
+| --------------------------- | ----------------------------------------------- |
+| `packages/lexer`            | Tokenization                                    |
+| `packages/ast`              | Typed AST, diagnostics, product naming          |
+| `packages/parser`           | Recursive-descent parser                        |
+| `packages/checker`          | Semantic validation                             |
+| `packages/interpreter`      | Deterministic event-chain matching              |
+| `packages/runtime`          | Mock response executor and audit log            |
+| `packages/test-runner`      | Replay DSL tests                                |
+| `packages/language-service` | Thin analyze API                                |
+| `packages/exporters`        | Scaffold only                                   |
+| `apps/playground`           | Browser editor and demo simulator               |
+| `examples/`                 | Ransomware, account-takeover, data-exfiltration |
 
 ## Documentation
 
@@ -91,8 +96,11 @@ Then open the local Vite URL (default `http://localhost:5173`).
 - [Language reference](./docs/language-reference.md)
 - [Runtime model](./docs/runtime-model.md)
 - [Safety model](./docs/safety-model.md)
-- [Type system notes](./docs/type-system.md)
 - [Project status](./PROJECT_STATUS.md)
+
+## Current maturity
+
+Hackathon/demo prototype. See [PROJECT_STATUS.md](./PROJECT_STATUS.md). Not production-ready.
 
 ## License
 

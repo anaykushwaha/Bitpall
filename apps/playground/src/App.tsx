@@ -1,6 +1,9 @@
 import { PRODUCT_NAME } from "@aegisscript/ast";
+import { ScenarioSelector } from "./components/ScenarioSelector";
 import { AstPanel } from "./components/visualization/AstPanel";
 import { DiagnosticsPanel } from "./components/visualization/DiagnosticsPanel";
+import { DetectionSummary } from "./components/simulator/DetectionSummary";
+import { EventChain } from "./components/simulator/EventChain";
 import { EventInput } from "./components/simulator/EventInput";
 import { ResponsePanel } from "./components/response/ResponsePanel";
 import { SourceEditor } from "./components/editor/SourceEditor";
@@ -9,16 +12,17 @@ import { TracePanel } from "./components/simulator/TracePanel";
 import { usePlayground } from "./hooks/usePlayground";
 
 export function App() {
-  const { state, setSource, setEventsJson, check, runSimulation, runTests } = usePlayground();
+  const { state, setSource, setEventsJson, loadScenario, check, runSimulation, runTests } =
+    usePlayground();
 
   return (
     <div className="layout">
       <header className="header">
         <div>
-          <h1 className="brand">{PRODUCT_NAME} Playground</h1>
+          <h1 className="brand">{PRODUCT_NAME}</h1>
           <p className="tagline">
-            Edit a defensive detection-to-response policy, inspect diagnostics and the AST, then
-            replay mock cybersecurity events.
+            Declarative multi-stage detection and simulated response across ransomware, identity,
+            and data-exfiltration scenarios.
           </p>
         </div>
         <div className="actions">
@@ -35,9 +39,11 @@ export function App() {
       </header>
 
       <div className="warning" role="status">
-        Response actions are simulated only. This playground never isolates devices, terminates
-        processes, or contacts real security platforms.
+        Response actions are simulated only. This playground never isolates devices, disables
+        accounts, revokes real sessions, terminates processes, or contacts security platforms.
       </div>
+
+      <ScenarioSelector selectedId={state.scenarioId} onSelect={loadScenario} />
 
       <div className="grid">
         <SourceEditor value={state.source} onChange={setSource} />
@@ -50,8 +56,13 @@ export function App() {
       </div>
 
       <div className="grid">
-        <TracePanel result={state.interpretResult} />
+        <DetectionSummary result={state.interpretResult} />
+        <EventChain result={state.interpretResult} events={state.parsedEvents} />
+      </div>
+
+      <div className="grid">
         <ResponsePanel result={state.interpretResult} />
+        <TracePanel result={state.interpretResult} />
       </div>
 
       <TestResultsPanel result={state.testResult} />

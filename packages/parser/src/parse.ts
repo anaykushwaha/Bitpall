@@ -425,6 +425,35 @@ class Parser {
           kind: "PreserveEvidenceAction",
           range: { start: actionStart, end: end.range.end },
         });
+      } else if (this.checkKeyword("revoke")) {
+        const actionStart = this.peek().range.start;
+        this.advance();
+        this.expectKeyword("sessions");
+        this.expectKeyword("user");
+        const target = this.parseIdentifier();
+        const end = this.expectSemicolon();
+        if (target) {
+          statements.push({
+            kind: "RevokeSessionsAction",
+            range: { start: actionStart, end: end.range.end },
+            targetKind: "user",
+            target,
+          });
+        }
+      } else if (this.checkKeyword("disable")) {
+        const actionStart = this.peek().range.start;
+        this.advance();
+        this.expectKeyword("account");
+        const target = this.parseIdentifier();
+        const end = this.expectSemicolon();
+        if (target) {
+          statements.push({
+            kind: "DisableAccountAction",
+            range: { start: actionStart, end: end.range.end },
+            targetKind: "account",
+            target,
+          });
+        }
       } else if (this.checkKeyword("approval")) {
         const actionStart = this.peek().range.start;
         this.advance();
@@ -475,6 +504,20 @@ class Parser {
             kind: "ReconnectAction",
             range: { start: actionStart, end: end.range.end },
             targetKind: "endpoint",
+            target,
+          });
+        }
+      } else if (this.checkKeyword("reenable")) {
+        const actionStart = this.peek().range.start;
+        this.advance();
+        this.expectKeyword("account");
+        const target = this.parseIdentifier();
+        const end = this.expectSemicolon();
+        if (target) {
+          statements.push({
+            kind: "ReenableAccountAction",
+            range: { start: actionStart, end: end.range.end },
+            targetKind: "account",
             target,
           });
         }
@@ -660,7 +703,10 @@ class Parser {
       lexeme === "confidence" ||
       lexeme === "sources" ||
       lexeme === "endpoint" ||
-      lexeme === "evidence"
+      lexeme === "evidence" ||
+      lexeme === "user" ||
+      lexeme === "account" ||
+      lexeme === "sessions"
     );
   }
 

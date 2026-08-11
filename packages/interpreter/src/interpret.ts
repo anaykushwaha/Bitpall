@@ -290,6 +290,20 @@ function executeResponses(
           ruleName,
           workspaceName,
         };
+      } else if (statement.kind === "RevokeSessionsAction") {
+        action = {
+          type: "revoke_sessions",
+          target: statement.target.name,
+          ruleName,
+          workspaceName,
+        };
+      } else if (statement.kind === "DisableAccountAction") {
+        action = {
+          type: "disable_account",
+          target: statement.target.name,
+          ruleName,
+          workspaceName,
+        };
       } else if (statement.kind === "ApprovalRequirement") {
         action = {
           type: statement.actionName.name as ResponseAction["type"],
@@ -300,7 +314,11 @@ function executeResponses(
       }
 
       if (action) {
-        if (approvalGates.has(action.type) && action.type !== "terminate_process") {
+        if (
+          approvalGates.has(action.type) &&
+          action.type !== "terminate_process" &&
+          action.type !== "disable_account"
+        ) {
           action = { ...action, requiresApproval: true };
         }
         const result = executor.execute(action, {
@@ -322,21 +340,30 @@ function executeResponses(
 
   if (rule.rollback) {
     for (const statement of rule.rollback.statements) {
+      let action: ResponseAction | null = null;
       if (statement.kind === "ReconnectAction") {
-        const result = executor.execute(
-          {
-            type: "reconnect_endpoint",
-            target: statement.target.name,
-            ruleName,
-            workspaceName,
-          },
-          {
-            workspaceName,
-            ruleName,
-            eventIds: chain.map((e) => e.id),
-            simulated: true,
-          },
-        );
+        action = {
+          type: "reconnect_endpoint",
+          target: statement.target.name,
+          ruleName,
+          workspaceName,
+        };
+      } else if (statement.kind === "ReenableAccountAction") {
+        action = {
+          type: "reenable_account",
+          target: statement.target.name,
+          ruleName,
+          workspaceName,
+        };
+      }
+
+      if (action) {
+        const result = executor.execute(action, {
+          workspaceName,
+          ruleName,
+          eventIds: chain.map((e) => e.id),
+          simulated: true,
+        });
         responses.push(result);
         trace.push({
           timestamp: result.timestamp,

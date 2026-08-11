@@ -1,0 +1,28 @@
+[
+  {
+    "id": "noout-1",
+    "type": "file_access",
+    "timestamp": "2026-08-06T14:00:00.000Z",
+    "source": "dlp-agent",
+    "confidence": 0.91,
+    "properties": {
+      "file": {
+        "sensitivity": "confidential",
+        "path": "/shares/research/prototype-specs.pdf"
+      }
+    }
+  },
+  {
+    "id": "noout-2",
+    "type": "file_archive",
+    "timestamp": "2026-08-06T14:08:00.000Z",
+    "source": "file-monitor",
+    "confidence": 0.86,
+    "properties": {
+      "file": {
+        "operation": "bulk_stage",
+        "path": "/tmp/research_bundle.zip"
+      }
+    }
+  }
+]

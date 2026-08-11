@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { DEFAULT_EVENTS_JSON, DEFAULT_POLICY } from "../lib/defaults";
 import { compileSource, executeTests, parseEventsJson, simulateProgram } from "../lib/pipeline";
+import { DEFAULT_SCENARIO_ID, getScenario, type ScenarioId } from "../lib/scenarios";
 import type { PlaygroundState } from "../types/playground";
 
 export function usePlayground() {
   const [state, setState] = useState<PlaygroundState>({
+    scenarioId: DEFAULT_SCENARIO_ID,
     source: DEFAULT_POLICY,
     eventsJson: DEFAULT_EVENTS_JSON,
     diagnostics: [],
     program: null,
     interpretResult: null,
     testResult: null,
+    parsedEvents: [],
     eventError: null,
   });
 
@@ -20,6 +23,21 @@ export function usePlayground() {
 
   const setEventsJson = (eventsJson: string) => {
     setState((prev) => ({ ...prev, eventsJson }));
+  };
+
+  const loadScenario = (scenarioId: ScenarioId) => {
+    const scenario = getScenario(scenarioId);
+    setState({
+      scenarioId,
+      source: scenario.policy,
+      eventsJson: scenario.eventsJson,
+      diagnostics: [],
+      program: null,
+      interpretResult: null,
+      testResult: null,
+      parsedEvents: [],
+      eventError: null,
+    });
   };
 
   const check = () => {
@@ -44,6 +62,7 @@ export function usePlayground() {
         program: compiled.program,
         interpretResult: null,
         testResult: null,
+        parsedEvents: [],
         eventError: "Fix diagnostics before running the simulation.",
       }));
       return;
@@ -57,6 +76,7 @@ export function usePlayground() {
         program: compiled.program,
         interpretResult: null,
         testResult: null,
+        parsedEvents: [],
         eventError: error,
       }));
       return;
@@ -69,6 +89,7 @@ export function usePlayground() {
       program: compiled.program,
       interpretResult,
       testResult: null,
+      parsedEvents: events,
       eventError: null,
     }));
   };
@@ -82,6 +103,7 @@ export function usePlayground() {
         program: compiled.program,
         interpretResult: null,
         testResult: null,
+        parsedEvents: [],
         eventError: "Fix diagnostics before running tests.",
       }));
       return;
@@ -95,6 +117,7 @@ export function usePlayground() {
         program: compiled.program,
         interpretResult: null,
         testResult: null,
+        parsedEvents: [],
         eventError: error,
       }));
       return;
@@ -107,6 +130,7 @@ export function usePlayground() {
       program: compiled.program,
       interpretResult: testResult.interpretResult,
       testResult,
+      parsedEvents: events,
       eventError: null,
     }));
   };
@@ -115,6 +139,7 @@ export function usePlayground() {
     state,
     setSource,
     setEventsJson,
+    loadScenario,
     check,
     runSimulation,
     runTests,

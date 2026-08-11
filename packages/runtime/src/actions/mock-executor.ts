@@ -11,7 +11,12 @@ const SUPPORTED = new Set([
   "preserve_evidence",
   "terminate_process",
   "reconnect_endpoint",
+  "revoke_sessions",
+  "disable_account",
+  "reenable_account",
 ]);
+
+const ALWAYS_PENDING = new Set(["terminate_process", "disable_account"]);
 
 /**
  * Simulation-only executor. Never contacts real security platforms or devices.
@@ -37,11 +42,15 @@ export class MockResponseExecutor implements ResponseExecutor {
       return result;
     }
 
-    if (action.type === "reconnect_endpoint") {
+    if (action.type === "reconnect_endpoint" || action.type === "reenable_account") {
+      const label =
+        action.type === "reconnect_endpoint"
+          ? `reconnect endpoint '${action.target ?? "unknown"}'`
+          : `reenable account '${action.target ?? "unknown"}'`;
       const result: ActionResult = {
         action,
         status: "recorded_rollback",
-        message: `Recorded rollback: reconnect endpoint '${action.target ?? "unknown"}' (simulation only)`,
+        message: `Recorded rollback: ${label} (simulation only)`,
         timestamp,
       };
       this.rollbacks.push(result);
@@ -49,7 +58,7 @@ export class MockResponseExecutor implements ResponseExecutor {
       return result;
     }
 
-    if (action.requiresApproval || action.type === "terminate_process") {
+    if (action.requiresApproval || ALWAYS_PENDING.has(action.type)) {
       const result: ActionResult = {
         action: { ...action, requiresApproval: true },
         status: "pending_approval",

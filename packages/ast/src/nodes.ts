@@ -15,8 +15,11 @@ export type AstNodeKind =
   | "RollbackBlock"
   | "IsolateAction"
   | "PreserveEvidenceAction"
+  | "RevokeSessionsAction"
+  | "DisableAccountAction"
   | "ApprovalRequirement"
   | "ReconnectAction"
+  | "ReenableAccountAction"
   | "ExpectRuleMatch"
   | "BinaryExpression"
   | "UnaryExpression"
@@ -141,13 +144,29 @@ export interface PreserveEvidenceActionNode extends AstNodeBase {
   readonly kind: "PreserveEvidenceAction";
 }
 
+export interface RevokeSessionsActionNode extends AstNodeBase {
+  readonly kind: "RevokeSessionsAction";
+  readonly targetKind: "user";
+  readonly target: IdentifierNode;
+}
+
+export interface DisableAccountActionNode extends AstNodeBase {
+  readonly kind: "DisableAccountAction";
+  readonly targetKind: "account";
+  readonly target: IdentifierNode;
+}
+
 export interface ApprovalRequirementNode extends AstNodeBase {
   readonly kind: "ApprovalRequirement";
   readonly actionName: IdentifierNode;
 }
 
 export type ResponseStatementNode =
-  IsolateActionNode | PreserveEvidenceActionNode | ApprovalRequirementNode;
+  | IsolateActionNode
+  | PreserveEvidenceActionNode
+  | RevokeSessionsActionNode
+  | DisableAccountActionNode
+  | ApprovalRequirementNode;
 
 export interface RespondBlockNode extends AstNodeBase {
   readonly kind: "RespondBlock";
@@ -160,7 +179,13 @@ export interface ReconnectActionNode extends AstNodeBase {
   readonly target: IdentifierNode;
 }
 
-export type RollbackStatementNode = ReconnectActionNode;
+export interface ReenableAccountActionNode extends AstNodeBase {
+  readonly kind: "ReenableAccountAction";
+  readonly targetKind: "account";
+  readonly target: IdentifierNode;
+}
+
+export type RollbackStatementNode = ReconnectActionNode | ReenableAccountActionNode;
 
 export interface RollbackBlockNode extends AstNodeBase {
   readonly kind: "RollbackBlock";

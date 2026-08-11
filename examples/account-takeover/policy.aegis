@@ -1,0 +1,47 @@
+workspace identity_ops {
+  asset user finance_analyst {
+    criticality = "high";
+  }
+
+  telemetry idp {
+    source = "identity-provider";
+  }
+
+  telemetry mfa {
+    source = "mfa-service";
+  }
+
+  telemetry directory {
+    source = "directory-audit";
+  }
+
+  rule account_takeover_chain {
+    observe successful_login
+      where login.risk == "unusual" and user.name == "finance_analyst";
+
+    then mfa_failure
+      where user.name == "finance_analyst"
+      within 10m;
+
+    then privilege_change
+      where user.name == "finance_analyst" and privilege.action == "role_grant"
+      within 30m;
+
+    require confidence >= 0.80;
+    require sources >= 2;
+
+    respond {
+      revoke sessions user finance_analyst;
+      preserve evidence;
+      disable account finance_analyst;
+    }
+
+    rollback {
+      reenable account finance_analyst;
+    }
+  }
+
+  test takeover_sequence {
+    expect rule account_takeover_chain to_match;
+  }
+}

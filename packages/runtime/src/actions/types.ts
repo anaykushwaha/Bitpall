@@ -1,5 +1,11 @@
 export type ResponseActionType =
-  "isolate_endpoint" | "preserve_evidence" | "terminate_process" | "reconnect_endpoint";
+  | "isolate_endpoint"
+  | "preserve_evidence"
+  | "terminate_process"
+  | "reconnect_endpoint"
+  | "revoke_sessions"
+  | "disable_account"
+  | "reenable_account";
 
 export type ActionStatus = "simulated" | "pending_approval" | "rejected" | "recorded_rollback";
 

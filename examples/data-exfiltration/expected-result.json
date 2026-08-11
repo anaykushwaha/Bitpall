@@ -1,0 +1,43 @@
+{
+  "matchedRules": ["sensitive_exfiltration_chain"],
+  "confidence": 0.84,
+  "sources": 3,
+  "matchedEventIds": ["exfil-1", "exfil-2", "exfil-3"],
+  "testsPassed": true,
+  "tests": [
+    {
+      "testName": "exfiltration_sequence",
+      "passed": true,
+      "assertions": [
+        {
+          "ruleName": "sensitive_exfiltration_chain",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "simulatedActions": [
+    {
+      "type": "isolate_endpoint",
+      "target": "research_workstation",
+      "status": "simulated"
+    },
+    {
+      "type": "preserve_evidence",
+      "status": "simulated"
+    }
+  ],
+  "pendingApprovals": [
+    {
+      "type": "terminate_process",
+      "status": "pending_approval"
+    }
+  ],
+  "rollbackActions": [
+    {
+      "type": "reconnect_endpoint",
+      "target": "research_workstation",
+      "status": "recorded_rollback"
+    }
+  ]
+}

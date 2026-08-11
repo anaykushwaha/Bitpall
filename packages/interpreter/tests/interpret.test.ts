@@ -367,6 +367,52 @@ workspace corporate_network {
     expect(result.auditLog.some((e) => e.result.action.type === "isolate_endpoint")).toBe(true);
     expect(result.rollbackActions.some((a) => a.action.type === "reconnect_endpoint")).toBe(true);
   });
+
+  it("simulates identity containment and keeps account disablement pending", () => {
+    const policy = `
+workspace identity_ops {
+  asset user finance_analyst { criticality = "high"; }
+  telemetry idp { source = "identity-provider"; }
+  telemetry mfa { source = "mfa-service"; }
+  rule takeover {
+    observe successful_login where user.name == "finance_analyst";
+    then mfa_failure where user.name == "finance_analyst" within 10m;
+    respond {
+      revoke sessions user finance_analyst;
+      preserve evidence;
+      disable account finance_analyst;
+    }
+    rollback { reenable account finance_analyst; }
+  }
+}
+`;
+    const result = run(policy, [
+      {
+        id: "a1",
+        type: "successful_login",
+        timestamp: "2026-08-06T09:00:00.000Z",
+        source: "identity-provider",
+        confidence: 0.9,
+        properties: { user: { name: "finance_analyst" } },
+      },
+      {
+        id: "a2",
+        type: "mfa_failure",
+        timestamp: "2026-08-06T09:02:00.000Z",
+        source: "mfa-service",
+        confidence: 0.9,
+        properties: { user: { name: "finance_analyst" } },
+      },
+    ]);
+    expect(result.ruleResults[0]?.matched).toBe(true);
+    expect(result.auditLog.some((e) => e.result.action.type === "revoke_sessions")).toBe(true);
+    expect(
+      result.pendingApprovals.some(
+        (a) => a.action.type === "disable_account" && a.action.target === "finance_analyst",
+      ),
+    ).toBe(true);
+    expect(result.rollbackActions.some((a) => a.action.type === "reenable_account")).toBe(true);
+  });
 });
 
 describe("interpreter observe candidate backtracking", () => {
