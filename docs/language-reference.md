@@ -1,6 +1,6 @@
 # Language reference
 
-Supported by the current lexer, parser, checker, interpreter, and test-runner unless noted.
+Bitpall programs are parsed, checked, interpreted, and tested by the current pipeline unless noted.
 
 ## `workspace`
 
@@ -12,7 +12,7 @@ Declaration names for assets, telemetry, rules, and tests share one namespace in
 
 Declares a named asset. Initial form:
 
-```aegis
+```bitpall
 asset endpoint finance_laptop {
   criticality = "high";
 }
@@ -22,7 +22,7 @@ asset endpoint finance_laptop {
 
 Declares a named telemetry source. At least one telemetry declaration is required per workspace.
 
-```aegis
+```bitpall
 telemetry edr {
   source = "endpoint-agent";
 }
@@ -84,13 +84,13 @@ Supported statements:
 
 ## `test`
 
-```aegis
+```bitpall
 test ransomware_sequence {
   expect rule suspicious_encryption_chain to_match;
 }
 ```
 
-`@aegisscript/test-runner` executes these expectations against interpreter results.
+`@bitpall/test-runner` executes these expectations against interpreter results.
 
 ## Operators and literals
 

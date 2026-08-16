@@ -1,4 +1,4 @@
-import { PRODUCT_NAME } from "@aegisscript/ast";
+import { PRODUCT_NAME } from "@bitpall/ast";
 import { ScenarioSelector } from "./components/ScenarioSelector";
 import { AstPanel } from "./components/visualization/AstPanel";
 import { DiagnosticsPanel } from "./components/visualization/DiagnosticsPanel";
@@ -19,10 +19,9 @@ export function App() {
     <div className="layout">
       <header className="header">
         <div>
-          <h1 className="brand">{PRODUCT_NAME}</h1>
+          <h1 className="brand">{PRODUCT_NAME} Playground</h1>
           <p className="tagline">
-            Declarative multi-stage detection and simulated response across ransomware, identity,
-            and data-exfiltration scenarios.
+            A cybersecurity language for deterministic detection and safe response automation.
           </p>
         </div>
         <div className="actions">

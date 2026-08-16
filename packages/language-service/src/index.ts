@@ -8,9 +8,9 @@ import {
   type Diagnostic,
   type ProgramNode,
   type SourceFile,
-} from "@aegisscript/ast";
-import { check } from "@aegisscript/checker";
-import { parse } from "@aegisscript/parser";
+} from "@bitpall/ast";
+import { check } from "@bitpall/checker";
+import { parse } from "@bitpall/parser";
 
 export interface AnalyzeResult {
   readonly source: SourceFile;

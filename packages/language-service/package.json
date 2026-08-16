@@ -1,5 +1,5 @@
 {
-  "name": "@aegisscript/language-service",
+  "name": "@bitpall/language-service",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -18,8 +18,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@aegisscript/ast": "workspace:*",
-    "@aegisscript/checker": "workspace:*",
-    "@aegisscript/parser": "workspace:*"
+    "@bitpall/ast": "workspace:*",
+    "@bitpall/checker": "workspace:*",
+    "@bitpall/parser": "workspace:*"
   }
 }

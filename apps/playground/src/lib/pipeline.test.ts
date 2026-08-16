@@ -43,13 +43,13 @@ const EVENTS = `[
 
 describe("playground pipeline helpers", () => {
   it("compiles source without executing simulation or tests", () => {
-    const compiled = compileSource("playground.aegis", POLICY_WITH_TESTS);
+    const compiled = compileSource("playground.bitpall", POLICY_WITH_TESTS);
     expect(compiled.ok).toBe(true);
     expect(compiled.program).not.toBeNull();
   });
 
   it("simulates rules without requiring test declarations", () => {
-    const compiled = compileSource("playground.aegis", POLICY_WITHOUT_TESTS);
+    const compiled = compileSource("playground.bitpall", POLICY_WITHOUT_TESTS);
     expect(compiled.ok).toBe(true);
     const events = parseEventsJson(EVENTS);
     expect(events.error).toBeNull();
@@ -58,7 +58,7 @@ describe("playground pipeline helpers", () => {
   });
 
   it("keeps simulation separate from test execution", () => {
-    const compiled = compileSource("playground.aegis", POLICY_WITH_TESTS);
+    const compiled = compileSource("playground.bitpall", POLICY_WITH_TESTS);
     const events = parseEventsJson(EVENTS).events;
     const simulated = simulateProgram(compiled.program!, events);
     const tested = executeTests(compiled.program!, events);

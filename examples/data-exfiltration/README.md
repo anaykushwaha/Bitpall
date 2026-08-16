@@ -1,6 +1,6 @@
 # Data exfiltration
 
-Detects sensitive-data access followed by staging and a large outbound transfer, then simulates endpoint containment.
+A Bitpall policy that detects sensitive-data access followed by staging and a large outbound transfer, then simulates endpoint containment.
 
 ## Story
 
@@ -22,6 +22,7 @@ pnpm example:data-exfiltration
 
 | File                              | Purpose                                         |
 | --------------------------------- | ----------------------------------------------- |
+| `policy.bitpall`                  | Bitpall detection and response policy           |
 | `events.json`                     | Positive match                                  |
 | `events-no-sensitive-access.json` | Transfer without confidential access — no match |
 | `events-no-outbound.json`         | Access + staging without outbound — no match    |

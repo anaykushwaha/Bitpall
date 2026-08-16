@@ -1,4 +1,4 @@
-import type { TestRunResult } from "@aegisscript/test-runner";
+import type { TestRunResult } from "@bitpall/test-runner";
 
 interface TestResultsPanelProps {
   result: TestRunResult | null;

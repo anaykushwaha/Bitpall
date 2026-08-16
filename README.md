@@ -1,8 +1,21 @@
-# AegisScript
+# Bitpall
 
-Security automation is often split across vendor-specific rule formats, scripts, and response APIs. **AegisScript** explores a safer declarative language for expressing multi-stage detection and response workflows with explicit evidence, confidence, approval, rollback, and testing semantics.
+**Behavioral Intelligence & Threat Protection Automation Logic Language**
 
-> **Safety:** All responses in this repository are simulated. AegisScript does not disable real users, isolate real machines, terminate real processes, revoke real sessions, or block real network traffic.
+Bitpall is a cybersecurity domain-specific language for expressing deterministic multi-stage threat detection and safe automated response policies.
+
+Security automation is often split across vendor-specific rule formats, scripts, and response APIs. Bitpall explores a safer declarative language for detection-and-response workflows with explicit evidence, confidence, approval, rollback, and testing semantics.
+
+> **Safety:** All responses in this repository are simulated. Bitpall does not disable real users, isolate real machines, terminate real processes, revoke real sessions, or block real network traffic.
+
+### What BITPALL stands for
+
+| Piece                       | Meaning                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------- |
+| **Behavioral Intelligence** | Models meaningful sequences of security behavior.                               |
+| **Threat Protection**       | Expresses defensive detection and containment policies.                         |
+| **Automation Logic**        | Defines deterministic responses, approvals, rollback, and tests.                |
+| **Language**                | Provides a purpose-built cybersecurity DSL rather than vendor-specific scripts. |
 
 ## What problem does it solve?
 
@@ -13,9 +26,9 @@ Detection content and response playbooks are usually scattered across consoles, 
 - keep approval gates and rollback steps next to the detection logic
 - replay deterministic security tests
 
-## What is AegisScript?
+## What is Bitpall?
 
-AegisScript is an experimental defensive cybersecurity DSL. Policies describe:
+Bitpall is an experimental defensive cybersecurity DSL. Policies describe:
 
 1. what to observe
 2. which follow-on events must occur
@@ -58,7 +71,7 @@ pnpm example:data-exfiltration
 ## Architecture
 
 ```text
-AegisScript source
+Bitpall source
         ↓
       Lexer
         ↓

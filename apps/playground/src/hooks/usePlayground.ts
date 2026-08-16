@@ -41,7 +41,7 @@ export function usePlayground() {
   };
 
   const check = () => {
-    const compiled = compileSource("playground.aegis", state.source);
+    const compiled = compileSource("playground.bitpall", state.source);
     setState((prev) => ({
       ...prev,
       diagnostics: compiled.diagnostics,
@@ -54,7 +54,7 @@ export function usePlayground() {
   };
 
   const runSimulation = () => {
-    const compiled = compileSource("playground.aegis", state.source);
+    const compiled = compileSource("playground.bitpall", state.source);
     if (!compiled.ok || !compiled.program) {
       setState((prev) => ({
         ...prev,
@@ -95,7 +95,7 @@ export function usePlayground() {
   };
 
   const runTests = () => {
-    const compiled = compileSource("playground.aegis", state.source);
+    const compiled = compileSource("playground.bitpall", state.source);
     if (!compiled.ok || !compiled.program) {
       setState((prev) => ({
         ...prev,

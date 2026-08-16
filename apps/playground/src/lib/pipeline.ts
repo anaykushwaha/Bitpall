@@ -1,12 +1,12 @@
-import type { Diagnostic, ProgramNode } from "@aegisscript/ast";
+import type { Diagnostic, ProgramNode } from "@bitpall/ast";
 import {
   interpret,
   validateMockEvents,
   type InterpretResult,
   type MockSecurityEvent,
-} from "@aegisscript/interpreter";
-import { analyzeSource } from "@aegisscript/language-service";
-import { runAegisTests, type TestRunResult } from "@aegisscript/test-runner";
+} from "@bitpall/interpreter";
+import { analyzeSource } from "@bitpall/language-service";
+import { runBitpallTests, type TestRunResult } from "@bitpall/test-runner";
 
 export interface CompileResult {
   readonly diagnostics: Diagnostic[];
@@ -60,5 +60,5 @@ export function executeTests(
   program: ProgramNode,
   events: readonly MockSecurityEvent[],
 ): TestRunResult {
-  return runAegisTests({ program, events });
+  return runBitpallTests({ program, events });
 }

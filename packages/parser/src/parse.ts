@@ -28,8 +28,8 @@ import {
   type ThenStageNode,
   type WorkspaceDeclarationNode,
   type WorkspaceMemberNode,
-} from "@aegisscript/ast";
-import { lex, type Token } from "@aegisscript/lexer";
+} from "@bitpall/ast";
+import { lex, type Token } from "@bitpall/lexer";
 
 export interface ParseResult {
   readonly program: ProgramNode | null;

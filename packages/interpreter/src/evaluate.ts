@@ -3,7 +3,7 @@ import type {
   ComparisonOperator,
   ExpressionNode,
   LiteralNode,
-} from "@aegisscript/ast";
+} from "@bitpall/ast";
 import { getProperty, type JsonObject, type JsonValue, type MockSecurityEvent } from "./events.js";
 
 function literalValue(node: LiteralNode): JsonValue {

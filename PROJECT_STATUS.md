@@ -1,12 +1,12 @@
-# AegisScript Project Status
+# Bitpall Project Status
 
-> AegisScript is currently an experimental defensive cybersecurity DSL. It is not ready to execute actions against real systems.
+> Bitpall is currently an experimental defensive cybersecurity DSL. It is not ready to execute actions against real systems.
 
 ## Status metadata
 
 | Field               | Value                                                                                                                    |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Project             | AegisScript                                                                                                              |
+| Project             | Bitpall                                                                                                                  |
 | Current phase       | Multi-scenario demo + playground polish — hackathon packaging next                                                       |
 | Overall status      | PARTIAL                                                                                                                  |
 | Last updated        | 2026-08-11                                                                                                               |
@@ -29,7 +29,7 @@
 
 ## Current project summary
 
-AegisScript can express the same declarative detection-to-response workflow across three cybersecurity domains: exploit-to-ransomware, account takeover, and data exfiltration. The interpreter performs deterministic ordered event-chain search with backtracking. Identity containment uses reusable `revoke sessions` / `disable account` / `reenable account` actions in the mock runtime. The playground loads all three scenarios and presents detection summary, matched event chain, response plan, and DSL test results.
+Bitpall can express the same declarative detection-to-response workflow across three cybersecurity domains: exploit-to-ransomware, account takeover, and data exfiltration. The interpreter performs deterministic ordered event-chain search with backtracking. Identity containment uses reusable `revoke sessions` / `disable account` / `reenable account` actions in the mock runtime. The playground loads all three scenarios and presents detection summary, matched event chain, response plan, and DSL test results.
 
 ## Phase roadmap
 
@@ -109,7 +109,7 @@ Optional later engineering (not required for the demo narrative):
 - Exporters are not implemented.
 - No LSP / VS Code extension / vendor adapters.
 - Soft keywords may appear in identifier positions.
-- The AegisScript name may change later.
+- Diagnostic codes still use the historical `AEGIS` prefix (semantic identifiers, not product branding).
 - No backwards-compatibility guarantee while experimental.
 - Interpreter matching is complete for hackathon/demo semantics, not production SIEM-scale workloads.
 - Final demo packaging (video / Devpost copy) remains.

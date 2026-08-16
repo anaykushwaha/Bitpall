@@ -1,12 +1,12 @@
-import { createSourceFile } from "@aegisscript/ast";
-import { check } from "@aegisscript/checker";
-import { parse } from "@aegisscript/parser";
-import type { MockSecurityEvent } from "@aegisscript/interpreter";
+import { createSourceFile } from "@bitpall/ast";
+import { check } from "@bitpall/checker";
+import { parse } from "@bitpall/parser";
+import type { MockSecurityEvent } from "@bitpall/interpreter";
 import { describe, expect, it } from "vitest";
-import { runAegisTests } from "../src/index.js";
+import { runBitpallTests } from "../src/index.js";
 
 function checked(text: string) {
-  const source = createSourceFile("policy.aegis", text);
+  const source = createSourceFile("policy.bitpall", text);
   const parsed = parse(source);
   expect(parsed.program).not.toBeNull();
   const result = check(parsed.program!, source);
@@ -49,14 +49,14 @@ workspace corporate_network {
 
 describe("test-runner", () => {
   it("passes a matching expectation", () => {
-    const result = runAegisTests({ program: checked(POLICY), events: matchingEvents });
+    const result = runBitpallTests({ program: checked(POLICY), events: matchingEvents });
     expect(result.passed).toBe(true);
     expect(result.tests).toHaveLength(1);
     expect(result.tests[0]?.assertions[0]?.passed).toBe(true);
   });
 
   it("fails when the rule does not match", () => {
-    const result = runAegisTests({
+    const result = runBitpallTests({
       program: checked(POLICY),
       events: [matchingEvents[0]!],
     });
@@ -82,7 +82,7 @@ workspace w {
   }
 }
 `);
-    const result = runAegisTests({ program, events: matchingEvents });
+    const result = runBitpallTests({ program, events: matchingEvents });
     expect(result.passed).toBe(true);
     expect(result.tests[0]?.assertions).toHaveLength(2);
   });
@@ -99,7 +99,7 @@ workspace w {
   test t2 { expect rule one to_match; }
 }
 `);
-    const result = runAegisTests({ program, events: matchingEvents });
+    const result = runBitpallTests({ program, events: matchingEvents });
     expect(result.tests.map((t) => t.testName)).toEqual(["t1", "t2"]);
     expect(result.passed).toBe(true);
   });
@@ -117,7 +117,7 @@ workspace beta {
   test t { expect rule two to_match; }
 }
 `);
-    const result = runAegisTests({ program, events: [matchingEvents[0]!] });
+    const result = runBitpallTests({ program, events: [matchingEvents[0]!] });
     expect(result.tests).toHaveLength(2);
     expect(result.tests.map((t) => t.workspaceName).sort()).toEqual(["alpha", "beta"]);
     expect(result.passed).toBe(true);
@@ -130,7 +130,7 @@ workspace w {
   rule one { observe process_start where process.name == "powershell.exe"; }
 }
 `);
-    const result = runAegisTests({ program, events: matchingEvents });
+    const result = runBitpallTests({ program, events: matchingEvents });
     expect(result.tests).toEqual([]);
     expect(result.passed).toBe(true);
     expect(result.interpretResult.ruleResults[0]?.matched).toBe(true);
@@ -138,8 +138,8 @@ workspace w {
 
   it("produces deterministic structured output", () => {
     const program = checked(POLICY);
-    const first = runAegisTests({ program, events: matchingEvents });
-    const second = runAegisTests({ program, events: matchingEvents });
+    const first = runBitpallTests({ program, events: matchingEvents });
+    const second = runBitpallTests({ program, events: matchingEvents });
     expect(first).toEqual(second);
   });
 
@@ -160,7 +160,7 @@ workspace corporate {
   test t { expect rule suspicious_login to_match; }
 }
 `);
-    const result = runAegisTests({ program, events: [matchingEvents[0]!] });
+    const result = runBitpallTests({ program, events: [matchingEvents[0]!] });
     const production = result.tests.find((t) => t.workspaceName === "production");
     const corporate = result.tests.find((t) => t.workspaceName === "corporate");
     expect(production?.passed).toBe(true);

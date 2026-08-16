@@ -1,6 +1,6 @@
-import type { Diagnostic, ProgramNode } from "@aegisscript/ast";
-import type { InterpretResult, MockSecurityEvent } from "@aegisscript/interpreter";
-import type { TestRunResult } from "@aegisscript/test-runner";
+import type { Diagnostic, ProgramNode } from "@bitpall/ast";
+import type { InterpretResult, MockSecurityEvent } from "@bitpall/interpreter";
+import type { TestRunResult } from "@bitpall/test-runner";
 import type { ScenarioId } from "../lib/scenarios";
 
 export interface PlaygroundState {

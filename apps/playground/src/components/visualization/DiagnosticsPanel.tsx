@@ -1,4 +1,4 @@
-import { formatDiagnostic, type Diagnostic } from "@aegisscript/ast";
+import { formatDiagnostic, type Diagnostic } from "@bitpall/ast";
 
 interface DiagnosticsPanelProps {
   diagnostics: Diagnostic[];

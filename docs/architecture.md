@@ -1,9 +1,9 @@
 # Architecture
 
-AegisScript uses a staged compiler pipeline with strict package boundaries.
+Bitpall uses a staged compiler pipeline with strict package boundaries.
 
 ```text
-source
+Bitpall source
   ↓
 lexer
   ↓
@@ -40,7 +40,7 @@ Lower-level packages must not import higher-level packages.
 
 ## Product naming
 
-Product constants such as `PRODUCT_NAME` live in `@aegisscript/ast` so a rename does not require rewriting every package.
+Product constants such as `PRODUCT_NAME` live in `@bitpall/ast` so a rename does not require rewriting every package.
 
 ## Safety boundary
 

@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createSourceFile } from "@aegisscript/ast";
-import { check } from "@aegisscript/checker";
-import { interpret, validateMockEvents } from "@aegisscript/interpreter";
-import { lex } from "@aegisscript/lexer";
-import { parse } from "@aegisscript/parser";
-import { runAegisTests } from "@aegisscript/test-runner";
+import { createSourceFile } from "@bitpall/ast";
+import { check } from "@bitpall/checker";
+import { interpret, validateMockEvents } from "@bitpall/interpreter";
+import { lex } from "@bitpall/lexer";
+import { parse } from "@bitpall/parser";
+import { runBitpallTests } from "@bitpall/test-runner";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -24,8 +24,8 @@ interface ExpectedResult {
 }
 
 function loadPolicy() {
-  const policyText = readFileSync(resolve(exampleRoot, "policy.aegis"), "utf8");
-  const source = createSourceFile("policy.aegis", policyText);
+  const policyText = readFileSync(resolve(exampleRoot, "policy.bitpall"), "utf8");
+  const source = createSourceFile("policy.bitpall", policyText);
   const lexed = lex(source);
   expect(lexed.diagnostics.filter((d) => d.severity === "error")).toEqual([]);
   const parsed = parse(source);
@@ -51,7 +51,7 @@ describe("data-exfiltration integration", () => {
       readFileSync(resolve(exampleRoot, "expected-result.json"), "utf8"),
     ) as ExpectedResult;
 
-    const testResult = runAegisTests({ program, events });
+    const testResult = runBitpallTests({ program, events });
     expect(testResult.passed).toBe(expected.testsPassed);
 
     const matched = testResult.interpretResult.ruleResults

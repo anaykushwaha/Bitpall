@@ -1,10 +1,10 @@
-import type { ProgramNode } from "@aegisscript/ast";
+import type { ProgramNode } from "@bitpall/ast";
 import {
   interpret,
   type InterpretOptions,
   type InterpretResult,
   type MockSecurityEvent,
-} from "@aegisscript/interpreter";
+} from "@bitpall/interpreter";
 
 export interface TestRunRequest {
   readonly program: ProgramNode;
@@ -40,10 +40,10 @@ export function ruleIdentity(workspaceName: string, ruleName: string): string {
 }
 
 /**
- * Execute AegisScript `test` declarations against validated mock events.
+ * Execute Bitpall `test` declarations against validated mock events.
  * Runs the interpreter once, then evaluates `expect rule … to_match` assertions.
  */
-export function runAegisTests(request: TestRunRequest): TestRunResult {
+export function runBitpallTests(request: TestRunRequest): TestRunResult {
   const interpretResult = interpret(
     request.program,
     request.events,

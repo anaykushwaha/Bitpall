@@ -1,6 +1,6 @@
-import { createSourceFile } from "@aegisscript/ast";
-import { check } from "@aegisscript/checker";
-import { parse } from "@aegisscript/parser";
+import { createSourceFile } from "@bitpall/ast";
+import { check } from "@bitpall/checker";
+import { parse } from "@bitpall/parser";
 import { describe, expect, it } from "vitest";
 import { chainConfidence, interpret, type MockSecurityEvent } from "../src/index.js";
 
@@ -31,7 +31,7 @@ workspace w {
 `;
 
 function run(policy: string, events: MockSecurityEvent[]) {
-  const source = createSourceFile("policy.aegis", policy);
+  const source = createSourceFile("policy.bitpall", policy);
   const parsed = parse(source);
   expect(parsed.program).not.toBeNull();
   const checked = check(parsed.program!, source);

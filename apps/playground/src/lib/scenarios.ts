@@ -1,8 +1,8 @@
-import ransomwarePolicy from "@examples/exploit-to-ransomware/policy.aegis?raw";
+import ransomwarePolicy from "@examples/exploit-to-ransomware/policy.bitpall?raw";
 import ransomwareEvents from "@examples/exploit-to-ransomware/events.json?raw";
-import accountTakeoverPolicy from "@examples/account-takeover/policy.aegis?raw";
+import accountTakeoverPolicy from "@examples/account-takeover/policy.bitpall?raw";
 import accountTakeoverEvents from "@examples/account-takeover/events.json?raw";
-import dataExfiltrationPolicy from "@examples/data-exfiltration/policy.aegis?raw";
+import dataExfiltrationPolicy from "@examples/data-exfiltration/policy.bitpall?raw";
 import dataExfiltrationEvents from "@examples/data-exfiltration/events.json?raw";
 
 export type ScenarioId = "ransomware" | "account-takeover" | "data-exfiltration";

@@ -1,4 +1,4 @@
-import type { SourceRange } from "@aegisscript/ast";
+import type { SourceRange } from "@bitpall/ast";
 
 export type TokenKind =
   | "Keyword"

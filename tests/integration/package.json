@@ -1,13 +1,13 @@
 {
-  "name": "aegisscript-integration-tests",
+  "name": "bitpall-integration-tests",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@aegisscript/ast": "workspace:*",
-    "@aegisscript/checker": "workspace:*",
-    "@aegisscript/interpreter": "workspace:*",
-    "@aegisscript/lexer": "workspace:*",
-    "@aegisscript/parser": "workspace:*",
-    "@aegisscript/test-runner": "workspace:*"
+    "@bitpall/ast": "workspace:*",
+    "@bitpall/checker": "workspace:*",
+    "@bitpall/interpreter": "workspace:*",
+    "@bitpall/lexer": "workspace:*",
+    "@bitpall/parser": "workspace:*",
+    "@bitpall/test-runner": "workspace:*"
   }
 }

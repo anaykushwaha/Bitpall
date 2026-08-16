@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { createSourceFile, formatDiagnostic } from "@aegisscript/ast";
-import { check } from "@aegisscript/checker";
-import { validateMockEvents } from "@aegisscript/interpreter";
-import { parse } from "@aegisscript/parser";
-import { runAegisTests } from "@aegisscript/test-runner";
+import { createSourceFile, formatDiagnostic } from "@bitpall/ast";
+import { check } from "@bitpall/checker";
+import { validateMockEvents } from "@bitpall/interpreter";
+import { parse } from "@bitpall/parser";
+import { runBitpallTests } from "@bitpall/test-runner";
 
 function usage(): never {
   console.error("Usage: tsx scripts/run-example.ts <example-directory>");
@@ -16,8 +16,10 @@ if (!exampleDir) {
   usage();
 }
 
+console.log("Running Bitpall example...");
+
 const root = resolve(exampleDir);
-const policyPath = resolve(root, "policy.aegis");
+const policyPath = resolve(root, "policy.bitpall");
 const eventsPath = resolve(root, "events.json");
 
 const policyText = readFileSync(policyPath, "utf8");
@@ -63,7 +65,7 @@ if (!validated.ok) {
   process.exit(1);
 }
 
-const testResult = runAegisTests({
+const testResult = runBitpallTests({
   program: checked.program,
   events: validated.events,
 });

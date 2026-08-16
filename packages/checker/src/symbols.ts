@@ -1,4 +1,4 @@
-import type { IdentifierNode, ProgramNode, SourceRange } from "@aegisscript/ast";
+import type { IdentifierNode, ProgramNode, SourceRange } from "@bitpall/ast";
 
 export interface SymbolEntry {
   readonly name: string;

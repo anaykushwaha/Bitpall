@@ -1,5 +1,5 @@
-import type { ActionResult, ActionStatus, ResponseActionType } from "@aegisscript/runtime";
-import type { MockSecurityEvent } from "@aegisscript/interpreter";
+import type { ActionResult, ActionStatus, ResponseActionType } from "@bitpall/runtime";
+import type { MockSecurityEvent } from "@bitpall/interpreter";
 
 const ACTION_LABELS: Record<ResponseActionType, string> = {
   isolate_endpoint: "Endpoint isolated",

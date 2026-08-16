@@ -1,5 +1,5 @@
 {
-  "name": "@aegisscript/interpreter",
+  "name": "@bitpall/interpreter",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -18,11 +18,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@aegisscript/ast": "workspace:*",
-    "@aegisscript/runtime": "workspace:*"
+    "@bitpall/ast": "workspace:*",
+    "@bitpall/runtime": "workspace:*"
   },
   "devDependencies": {
-    "@aegisscript/checker": "workspace:*",
-    "@aegisscript/parser": "workspace:*"
+    "@bitpall/checker": "workspace:*",
+    "@bitpall/parser": "workspace:*"
   }
 }

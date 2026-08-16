@@ -4,14 +4,14 @@ import type {
   RuleDeclarationNode,
   ThenStageNode,
   WorkspaceDeclarationNode,
-} from "@aegisscript/ast";
+} from "@bitpall/ast";
 import {
   MockResponseExecutor,
   type ActionResult,
   type AuditEntry,
   type ResponseAction,
   type ResponseExecutor,
-} from "@aegisscript/runtime";
+} from "@bitpall/runtime";
 import { chainConfidence, countDistinctSources, eventMatchesTypeAndCondition } from "./evaluate.js";
 import { eventTimeMs, orderEvents, type MockSecurityEvent } from "./events.js";
 

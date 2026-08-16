@@ -1,5 +1,7 @@
 # Contributing
 
+This repository implements **Bitpall**, a defensive cybersecurity DSL.
+
 ## Development setup
 
 1. Install Node.js 20+.

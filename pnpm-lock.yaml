@@ -7,22 +7,22 @@ settings:
 importers:
   .:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:packages/ast
-      "@aegisscript/checker":
+      "@bitpall/checker":
         specifier: workspace:*
         version: link:packages/checker
-      "@aegisscript/interpreter":
+      "@bitpall/interpreter":
         specifier: workspace:*
         version: link:packages/interpreter
-      "@aegisscript/lexer":
+      "@bitpall/lexer":
         specifier: workspace:*
         version: link:packages/lexer
-      "@aegisscript/parser":
+      "@bitpall/parser":
         specifier: workspace:*
         version: link:packages/parser
-      "@aegisscript/test-runner":
+      "@bitpall/test-runner":
         specifier: workspace:*
         version: link:packages/test-runner
     devDependencies:
@@ -53,25 +53,25 @@ importers:
 
   apps/playground:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:../../packages/ast
-      "@aegisscript/checker":
+      "@bitpall/checker":
         specifier: workspace:*
         version: link:../../packages/checker
-      "@aegisscript/interpreter":
+      "@bitpall/interpreter":
         specifier: workspace:*
         version: link:../../packages/interpreter
-      "@aegisscript/language-service":
+      "@bitpall/language-service":
         specifier: workspace:*
         version: link:../../packages/language-service
-      "@aegisscript/parser":
+      "@bitpall/parser":
         specifier: workspace:*
         version: link:../../packages/parser
-      "@aegisscript/runtime":
+      "@bitpall/runtime":
         specifier: workspace:*
         version: link:../../packages/runtime
-      "@aegisscript/test-runner":
+      "@bitpall/test-runner":
         specifier: workspace:*
         version: link:../../packages/test-runner
       react:
@@ -98,60 +98,60 @@ importers:
 
   packages/checker:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:../ast
     devDependencies:
-      "@aegisscript/parser":
+      "@bitpall/parser":
         specifier: workspace:*
         version: link:../parser
 
   packages/exporters:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:../ast
 
   packages/interpreter:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:../ast
-      "@aegisscript/runtime":
+      "@bitpall/runtime":
         specifier: workspace:*
         version: link:../runtime
     devDependencies:
-      "@aegisscript/checker":
+      "@bitpall/checker":
         specifier: workspace:*
         version: link:../checker
-      "@aegisscript/parser":
+      "@bitpall/parser":
         specifier: workspace:*
         version: link:../parser
 
   packages/language-service:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:../ast
-      "@aegisscript/checker":
+      "@bitpall/checker":
         specifier: workspace:*
         version: link:../checker
-      "@aegisscript/parser":
+      "@bitpall/parser":
         specifier: workspace:*
         version: link:../parser
 
   packages/lexer:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:../ast
 
   packages/parser:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:../ast
-      "@aegisscript/lexer":
+      "@bitpall/lexer":
         specifier: workspace:*
         version: link:../lexer
 
@@ -159,31 +159,31 @@ importers:
 
   packages/test-runner:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:../ast
-      "@aegisscript/interpreter":
+      "@bitpall/interpreter":
         specifier: workspace:*
         version: link:../interpreter
 
   tests/integration:
     dependencies:
-      "@aegisscript/ast":
+      "@bitpall/ast":
         specifier: workspace:*
         version: link:../../packages/ast
-      "@aegisscript/checker":
+      "@bitpall/checker":
         specifier: workspace:*
         version: link:../../packages/checker
-      "@aegisscript/interpreter":
+      "@bitpall/interpreter":
         specifier: workspace:*
         version: link:../../packages/interpreter
-      "@aegisscript/lexer":
+      "@bitpall/lexer":
         specifier: workspace:*
         version: link:../../packages/lexer
-      "@aegisscript/parser":
+      "@bitpall/parser":
         specifier: workspace:*
         version: link:../../packages/parser
-      "@aegisscript/test-runner":
+      "@bitpall/test-runner":
         specifier: workspace:*
         version: link:../../packages/test-runner
 

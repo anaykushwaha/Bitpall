@@ -1,8 +1,8 @@
-import { createSourceFile } from "@aegisscript/ast";
+import { createSourceFile } from "@bitpall/ast";
 import { describe, expect, it } from "vitest";
 import { lex } from "../src/index.js";
 
-function lexText(text: string, fileName = "test.aegis") {
+function lexText(text: string, fileName = "test.bitpall") {
   return lex(createSourceFile(fileName, text));
 }
 

@@ -7,7 +7,7 @@ import {
   type SourceFile,
   type StringLiteralNode,
   type TelemetryDeclarationNode,
-} from "@aegisscript/ast";
+} from "@bitpall/ast";
 import { buildSymbolTable } from "./symbols.js";
 
 export interface CheckResult {

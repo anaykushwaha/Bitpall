@@ -1,10 +1,10 @@
-import { createSourceFile } from "@aegisscript/ast";
-import { parse } from "@aegisscript/parser";
+import { createSourceFile } from "@bitpall/ast";
+import { parse } from "@bitpall/parser";
 import { describe, expect, it } from "vitest";
 import { check } from "../src/index.js";
 
 function checkSource(text: string) {
-  const source = createSourceFile("test.aegis", text);
+  const source = createSourceFile("test.bitpall", text);
   const parsed = parse(source);
   expect(parsed.program).not.toBeNull();
   const parseErrors = parsed.diagnostics.filter((d) => d.severity === "error");
@@ -207,7 +207,7 @@ workspace w {
   it("rejects negative source thresholds when a negative literal is present", () => {
     // Negative literals are uncommon in the grammar; guard the checker path via raw AST.
     const source = createSourceFile(
-      "test.aegis",
+      "test.bitpall",
       `
 workspace w {
   telemetry edr { source = "a"; }

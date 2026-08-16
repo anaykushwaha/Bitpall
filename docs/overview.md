@@ -1,6 +1,6 @@
 # Overview
 
-AegisScript is a defensive detection-to-response language. A policy describes:
+**Bitpall — Behavioral Intelligence & Threat Protection Automation Logic Language** — is a defensive detection-to-response language. A Bitpall policy describes:
 
 - assets worth protecting
 - telemetry sources that supply evidence

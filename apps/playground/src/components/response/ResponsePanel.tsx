@@ -1,4 +1,4 @@
-import type { InterpretResult } from "@aegisscript/interpreter";
+import type { InterpretResult } from "@bitpall/interpreter";
 import { formatActionLabel, formatActionStatus, groupActions, statusGlyph } from "../../lib/format";
 
 interface ResponsePanelProps {

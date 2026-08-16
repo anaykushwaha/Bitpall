@@ -1,4 +1,4 @@
-import type { InterpretResult, MockSecurityEvent } from "@aegisscript/interpreter";
+import type { InterpretResult, MockSecurityEvent } from "@bitpall/interpreter";
 import { describeEvent, formatTimestamp } from "../../lib/format";
 
 interface EventChainProps {

@@ -1,5 +1,5 @@
 {
-  "name": "@aegisscript/playground",
+  "name": "@bitpall/playground",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,13 +12,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@aegisscript/ast": "workspace:*",
-    "@aegisscript/checker": "workspace:*",
-    "@aegisscript/interpreter": "workspace:*",
-    "@aegisscript/language-service": "workspace:*",
-    "@aegisscript/parser": "workspace:*",
-    "@aegisscript/runtime": "workspace:*",
-    "@aegisscript/test-runner": "workspace:*",
+    "@bitpall/ast": "workspace:*",
+    "@bitpall/checker": "workspace:*",
+    "@bitpall/interpreter": "workspace:*",
+    "@bitpall/language-service": "workspace:*",
+    "@bitpall/parser": "workspace:*",
+    "@bitpall/runtime": "workspace:*",
+    "@bitpall/test-runner": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

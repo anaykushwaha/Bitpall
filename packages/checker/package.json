@@ -1,5 +1,5 @@
 {
-  "name": "@aegisscript/checker",
+  "name": "@bitpall/checker",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -18,9 +18,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@aegisscript/ast": "workspace:*"
+    "@bitpall/ast": "workspace:*"
   },
   "devDependencies": {
-    "@aegisscript/parser": "workspace:*"
+    "@bitpall/parser": "workspace:*"
   }
 }

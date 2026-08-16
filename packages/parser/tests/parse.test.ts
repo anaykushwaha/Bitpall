@@ -1,4 +1,4 @@
-import { createSourceFile } from "@aegisscript/ast";
+import { createSourceFile } from "@bitpall/ast";
 import { describe, expect, it } from "vitest";
 import { parse } from "../src/index.js";
 
@@ -41,7 +41,7 @@ workspace corporate_network {
 
 describe("parser", () => {
   it("parses a minimal valid workspace", () => {
-    const result = parse(createSourceFile("min.aegis", "workspace demo {\n}\n"));
+    const result = parse(createSourceFile("min.bitpall", "workspace demo {\n}\n"));
     expect(result.diagnostics.filter((d) => d.severity === "error")).toHaveLength(0);
     expect(result.program?.workspaces).toHaveLength(1);
     expect(result.program?.workspaces[0]?.name.name).toBe("demo");
@@ -50,7 +50,7 @@ describe("parser", () => {
   it("parses assets and telemetry", () => {
     const result = parse(
       createSourceFile(
-        "at.aegis",
+        "at.bitpall",
         `workspace w {
   asset endpoint laptop { criticality = "high"; }
   telemetry edr { source = "agent"; }
@@ -64,7 +64,7 @@ describe("parser", () => {
   });
 
   it("parses a complete rule with observe/then/response/rollback", () => {
-    const result = parse(createSourceFile("policy.aegis", EXAMPLE));
+    const result = parse(createSourceFile("policy.bitpall", EXAMPLE));
     const errors = result.diagnostics.filter((d) => d.severity === "error");
     expect(errors).toEqual([]);
     const rule = result.program?.workspaces[0]?.members.find((m) => m.kind === "RuleDeclaration");
@@ -81,7 +81,7 @@ describe("parser", () => {
   it("parses identity response and rollback actions", () => {
     const result = parse(
       createSourceFile(
-        "identity.aegis",
+        "identity.bitpall",
         `workspace identity_ops {
   asset user finance_analyst { criticality = "high"; }
   telemetry idp { source = "identity-provider"; }
@@ -113,7 +113,7 @@ describe("parser", () => {
   });
 
   it("parses tests", () => {
-    const result = parse(createSourceFile("policy.aegis", EXAMPLE));
+    const result = parse(createSourceFile("policy.bitpall", EXAMPLE));
     const test = result.program?.workspaces[0]?.members.find((m) => m.kind === "TestDeclaration");
     expect(test?.kind).toBe("TestDeclaration");
     if (test?.kind === "TestDeclaration") {
@@ -124,7 +124,7 @@ describe("parser", () => {
   it("reports missing semicolons", () => {
     const result = parse(
       createSourceFile(
-        "bad.aegis",
+        "bad.bitpall",
         `workspace w {
   asset endpoint laptop {
     criticality = "high"
@@ -137,20 +137,20 @@ describe("parser", () => {
 
   it("reports missing braces", () => {
     const result = parse(
-      createSourceFile("bad.aegis", 'workspace w { asset endpoint x { criticality = "high"; }'),
+      createSourceFile("bad.bitpall", 'workspace w { asset endpoint x { criticality = "high"; }'),
     );
     expect(result.diagnostics.some((d) => d.code === "AEGIS2003")).toBe(true);
   });
 
   it("reports unexpected tokens", () => {
-    const result = parse(createSourceFile("bad.aegis", "workspace w { foobar x; }"));
+    const result = parse(createSourceFile("bad.bitpall", "workspace w { foobar x; }"));
     expect(result.diagnostics.some((d) => d.code === "AEGIS2001")).toBe(true);
   });
 
   it("recovers after malformed members and continues parsing", () => {
     const result = parse(
       createSourceFile(
-        "recover.aegis",
+        "recover.bitpall",
         `workspace w {
   !!!;
   asset endpoint laptop { criticality = "high"; }
@@ -165,7 +165,7 @@ describe("parser", () => {
   it("reports duplicate observe stages", () => {
     const result = parse(
       createSourceFile(
-        "dup.aegis",
+        "dup.bitpall",
         `workspace w {
   rule r {
     observe a where process.name == "a";

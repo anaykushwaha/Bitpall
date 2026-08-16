@@ -1,5 +1,5 @@
 {
-  "name": "@aegisscript/ast",
+  "name": "@bitpall/ast",
   "version": "0.1.0",
   "private": true,
   "type": "module",

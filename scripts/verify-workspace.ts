@@ -12,9 +12,9 @@ const required = [
   "packages/interpreter/package.json",
   "packages/runtime/package.json",
   "apps/playground/package.json",
-  "examples/exploit-to-ransomware/policy.aegis",
-  "examples/account-takeover/policy.aegis",
-  "examples/data-exfiltration/policy.aegis",
+  "examples/exploit-to-ransomware/policy.bitpall",
+  "examples/account-takeover/policy.bitpall",
+  "examples/data-exfiltration/policy.bitpall",
   "PROJECT_STATUS.md",
 ];
 

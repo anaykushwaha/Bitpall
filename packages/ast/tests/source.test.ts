@@ -17,8 +17,8 @@ describe("source model", () => {
   });
 
   it("creates source files", () => {
-    const file = createSourceFile("policy.aegis", "workspace x {}");
-    expect(file.fileName).toBe("policy.aegis");
+    const file = createSourceFile("policy.bitpall", "workspace x {}");
+    expect(file.fileName).toBe("policy.bitpall");
     expect(file.text).toContain("workspace");
   });
 });
@@ -29,9 +29,9 @@ describe("diagnostics", () => {
       code: "AEGIS1001",
       severity: "error",
       message: "Invalid character",
-      fileName: "policy.aegis",
+      fileName: "policy.bitpall",
       range: rangeOf("x", 0, 1),
     });
-    expect(message).toBe("policy.aegis:1:1: error AEGIS1001: Invalid character");
+    expect(message).toBe("policy.bitpall:1:1: error AEGIS1001: Invalid character");
   });
 });

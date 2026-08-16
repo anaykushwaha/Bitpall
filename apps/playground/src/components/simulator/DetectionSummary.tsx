@@ -1,4 +1,4 @@
-import type { InterpretResult } from "@aegisscript/interpreter";
+import type { InterpretResult } from "@bitpall/interpreter";
 
 interface DetectionSummaryProps {
   result: InterpretResult | null;

@@ -4,7 +4,7 @@ import {
   type Diagnostic,
   type SourceFile,
   type SourceRange,
-} from "@aegisscript/ast";
+} from "@bitpall/ast";
 import { KEYWORD_SET, type Token } from "./token.js";
 
 export interface LexResult {

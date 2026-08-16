@@ -1,5 +1,5 @@
 {
-  "name": "@aegisscript/runtime",
+  "name": "@bitpall/runtime",
   "version": "0.1.0",
   "private": true,
   "type": "module",

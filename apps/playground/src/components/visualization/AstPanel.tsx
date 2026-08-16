@@ -1,4 +1,4 @@
-import type { ProgramNode } from "@aegisscript/ast";
+import type { ProgramNode } from "@bitpall/ast";
 
 interface AstPanelProps {
   program: ProgramNode | null;

@@ -1,6 +1,6 @@
 # Account takeover
 
-Detects a multi-stage identity compromise chain and simulates identity containment.
+A Bitpall policy that detects a multi-stage identity compromise chain and simulates identity containment.
 
 ## Story
 
@@ -22,6 +22,7 @@ pnpm example:account-takeover
 
 | File                         | Purpose                                      |
 | ---------------------------- | -------------------------------------------- |
+| `policy.bitpall`             | Bitpall detection and response policy        |
 | `events.json`                | Positive match                               |
 | `events-benign.json`         | Normal login — no match                      |
 | `events-outside-window.json` | MFA outside `within 10m` — no match          |
