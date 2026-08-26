@@ -59,9 +59,11 @@ Structured condition & requirement explanations
 Response plan (simulated / pending approval)
       ↓
 Mock executor audit log (no real side effects)
+      ↓
+Markdown detection report (optional export)
 ```
 
-Judges can inspect **Detection → Event chain → Response** in the playground. Compiler diagnostics stay visible by default; AST and raw detection traces live under **Advanced**.
+Judges can inspect **Detection → Event chain → Response** in the playground, then **Export Markdown** for a deterministic security report. Compiler diagnostics stay visible by default; AST and raw detection traces live under **Advanced**.
 
 ## Three scenarios
 
@@ -94,7 +96,21 @@ pnpm example:account-takeover
 pnpm example:data-exfiltration
 ```
 
-In the playground: pick a scenario, edit policy/events if desired, then **Run Simulation** or **Run Tests**.
+In the playground: pick a scenario, edit policy/events if desired, then **Run Simulation** or **Run Tests**. After a simulation, use **Export Markdown** to download a Bitpall detection report.
+
+### Markdown export (programmatic)
+
+```ts
+import { exportDocumentation } from "@bitpall/exporters";
+
+const markdown = exportDocumentation({
+  format: "markdown",
+  program,
+  result, // InterpretResult from @bitpall/interpreter
+  events,
+  scenarioName: "Exploit → Ransomware",
+});
+```
 
 ## Testing
 
@@ -121,9 +137,20 @@ pnpm verify
 | `packages/runtime`          | Mock response executor and audit log                   |
 | `packages/test-runner`      | `expect rule … to_match` replay                        |
 | `packages/language-service` | Thin analyze API (not a full LSP)                      |
-| `packages/exporters`        | Scaffold only — not implemented                        |
-| `apps/playground`           | Browser editor and demo simulator                      |
+| `packages/exporters`        | Deterministic Markdown detection-report export         |
+| `apps/playground`           | Browser editor, demo simulator, Markdown download      |
 | `examples/`                 | Three core cybersecurity demos                         |
+
+## Capabilities
+
+- Cybersecurity-focused DSL (`.bitpall`)
+- Lexer → parser → AST → checker → interpreter → mock runtime
+- Temporal multi-stage event-chain detection with explainability
+- Confidence / source requirements
+- Simulated response actions with approval gates and rollback metadata
+- Three end-to-end scenarios (ransomware, account takeover, data exfiltration)
+- Interactive playground
+- Deterministic Markdown security-report export
 
 ## Documentation
 
@@ -141,9 +168,9 @@ This is a hackathon/demo prototype. It does **not** currently include:
 
 - production security-product integrations
 - real endpoint / identity / network mutation
-- exporters / Markdown export
 - full Language Server Protocol or VS Code extension
 - modules, macros, or package publishing
+- formats beyond Markdown for exporters (JSON/PDF/etc.)
 
 Those are intentional boundaries for this stage — not incomplete claims of production readiness.
 

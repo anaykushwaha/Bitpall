@@ -59,6 +59,9 @@ importers:
       "@bitpall/checker":
         specifier: workspace:*
         version: link:../../packages/checker
+      "@bitpall/exporters":
+        specifier: workspace:*
+        version: link:../../packages/exporters
       "@bitpall/interpreter":
         specifier: workspace:*
         version: link:../../packages/interpreter
@@ -111,6 +114,19 @@ importers:
       "@bitpall/ast":
         specifier: workspace:*
         version: link:../ast
+      "@bitpall/interpreter":
+        specifier: workspace:*
+        version: link:../interpreter
+      "@bitpall/runtime":
+        specifier: workspace:*
+        version: link:../runtime
+    devDependencies:
+      "@bitpall/checker":
+        specifier: workspace:*
+        version: link:../checker
+      "@bitpall/parser":
+        specifier: workspace:*
+        version: link:../parser
 
   packages/interpreter:
     dependencies:

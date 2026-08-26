@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const required = [
@@ -11,6 +11,9 @@ const required = [
   "packages/checker/package.json",
   "packages/interpreter/package.json",
   "packages/runtime/package.json",
+  "packages/language-service/package.json",
+  "packages/test-runner/package.json",
+  "packages/exporters/package.json",
   "apps/playground/package.json",
   "examples/exploit-to-ransomware/policy.bitpall",
   "examples/account-takeover/policy.bitpall",
@@ -26,6 +29,15 @@ for (const path of required) {
     failed = true;
   } else {
     console.log(`OK: ${path}`);
+  }
+}
+
+const workspace = readFileSync(resolve("pnpm-workspace.yaml"), "utf8");
+const expectedGlobs = ["apps/*", "packages/*", "tests/integration"];
+for (const glob of expectedGlobs) {
+  if (!workspace.includes(glob)) {
+    console.error(`pnpm-workspace.yaml missing expected glob: ${glob}`);
+    failed = true;
   }
 }
 

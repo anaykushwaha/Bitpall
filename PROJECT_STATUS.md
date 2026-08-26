@@ -1,19 +1,17 @@
 # Bitpall Project Status
 
-> Bitpall is currently an experimental defensive cybersecurity DSL. It is not ready to execute actions against real systems.
+> Bitpall is an experimental defensive cybersecurity DSL. Response actions are simulation-only and must not target real systems.
 
 ## Status metadata
 
-| Field               | Value                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Project             | Bitpall                                                                                                                  |
-| Current phase       | Multi-scenario demo + playground polish — hackathon packaging next                                                       |
-| Overall status      | PARTIAL                                                                                                                  |
-| Last updated        | 2026-08-11                                                                                                               |
-| Current HEAD        | `55e3f330a6a5c688b15da9119fecf8cb3aba8b96`                                                                               |
-| Uncommitted changes | Account-takeover + data-exfiltration examples, identity response actions, playground demo polish — **not yet committed** |
-| Maintainer          | Project team                                                                                                             |
-| Current milestone   | Hackathon demo readiness                                                                                                 |
+| Field             | Value                                                                           |
+| ----------------- | ------------------------------------------------------------------------------- |
+| Project           | Bitpall (Behavioral Intelligence & Threat Protection Automation Logic Language) |
+| Current phase     | Hackathon scope complete — manual playground QA / submission packaging next     |
+| Overall status    | COMPLETE for intended hackathon scope                                           |
+| Last updated      | 2026-08-26                                                                      |
+| Maintainer        | Project team                                                                    |
+| Current milestone | Manual QA + Devpost/submission packaging                                        |
 
 ## Status legend
 
@@ -29,90 +27,85 @@
 
 ## Current project summary
 
-Bitpall can express the same declarative detection-to-response workflow across three cybersecurity domains: exploit-to-ransomware, account takeover, and data exfiltration. The interpreter performs deterministic ordered event-chain search with backtracking. Identity containment uses reusable `revoke sessions` / `disable account` / `reenable account` actions in the mock runtime. The playground loads all three scenarios and presents detection summary, matched event chain, response plan, and DSL test results.
+Bitpall expresses declarative multi-stage detection and simulated response across three cybersecurity demos: exploit-to-ransomware, account takeover, and data exfiltration. The interpreter performs deterministic ordered event-chain search with backtracking and structured match/requirement explanations. The playground presents Detection → Event Chain → Response, with Advanced AST/trace details and Markdown report export via `@bitpall/exporters`.
 
 ## Phase roadmap
 
-| Phase    | Scope                                             | Status      | Completion criteria                                                                                   |
-| -------- | ------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
-| Phase 0  | Repository and workspace initialization           | COMPLETE    | Workspace installs successfully and root development commands are configured.                         |
-| Phase 1  | Source model, diagnostics, AST, lexer, and parser | COMPLETE    | Supported example parses into a typed AST with useful diagnostics and passing tests.                  |
-| Phase 2  | Name resolution and semantic checker              | COMPLETE    | Semantic rules validated, including cross-kind duplicates and telemetry checks.                       |
-| Phase 3  | Mock event interpreter                            | COMPLETE    | Complete for current hackathon/demo semantics: ordered chain search with observe + then backtracking. |
-| Phase 4  | Safe response runtime                             | COMPLETE    | Mock executor with approval and rollback metadata, including identity actions.                        |
-| Phase 5  | Test runner and ransomware example                | COMPLETE    | Workspace-scoped expectations; ransomware example integration covers the full pipeline.               |
-| Phase 6  | Browser playground                                | COMPLETE    | Scenario switcher + detection/event-chain/response presentation for demo scope.                       |
-| Phase 7  | Language-service foundation                       | PARTIAL     | `analyzeSource` wraps parse+check; full LSP is not implemented.                                       |
-| Phase 8  | Additional demo examples                          | COMPLETE    | Account-takeover and data-exfiltration examples fully implemented with fixtures and tests.            |
-| Phase 9  | Exporters                                         | NOT STARTED | At least one deterministic export format.                                                             |
-| Phase 10 | Production adapters                               | DEFERRED    | Requires a separate security and architecture review.                                                 |
+| Phase    | Scope                                             | Status   | Completion criteria                                                                         |
+| -------- | ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| Phase 0  | Repository and workspace initialization           | COMPLETE | Workspace installs successfully and root development commands are configured.               |
+| Phase 1  | Source model, diagnostics, AST, lexer, and parser | COMPLETE | Supported example parses into a typed AST with useful diagnostics and passing tests.        |
+| Phase 2  | Name resolution and semantic checker              | COMPLETE | Semantic rules validated, including cross-kind duplicates and telemetry checks.             |
+| Phase 3  | Mock event interpreter                            | COMPLETE | Ordered chain search with observe + then backtracking; structured explanations.             |
+| Phase 4  | Safe response runtime                             | COMPLETE | Mock executor with approval and rollback metadata, including identity actions.              |
+| Phase 5  | Test runner and ransomware example                | COMPLETE | Workspace-scoped expectations; ransomware example integration covers the full pipeline.     |
+| Phase 6  | Browser playground                                | COMPLETE | Scenario switcher; Detection / Event chain / Response; Advanced AST/trace; Markdown export. |
+| Phase 7  | Language-service foundation                       | PARTIAL  | `analyzeSource` wraps parse+check; full LSP is not implemented.                             |
+| Phase 8  | Additional demo examples                          | COMPLETE | Account-takeover and data-exfiltration examples with fixtures and tests.                    |
+| Phase 9  | Exporters                                         | COMPLETE | Deterministic Markdown detection-report exporter + playground download.                     |
+| Phase 10 | Production adapters                               | DEFERRED | Requires a separate security and architecture review.                                       |
 
 ## Implemented
 
-### Core language and pipeline
-
 - Lexer, parser, AST, checker, interpreter, mock runtime, test-runner
 - Ordered multi-stage temporal matching with deterministic chain-search backtracking
-- Identity responses: `revoke sessions user`, `disable account`, `reenable account`
+- Structured condition and requirement explanations (interpreter → playground)
+- Identity responses: `revoke sessions` / `disable account` / `reenable account`
 - Endpoint responses: isolate / preserve / terminate (approval) / reconnect
 - Three end-to-end examples with positive and negative fixtures
-- Playground scenario selector and security-demo oriented result panels
+- Playground scenario selector, explainable result panels, Advanced section
+- Deterministic Markdown security-report export (`@bitpall/exporters`)
 
 ## Next recommended task
 
-**Final visual polish, demo script/video, and Devpost submission packaging.**
+**Manual playground QA and hackathon submission packaging** (copy, optional demo video).
 
-Optional later engineering (not required for the demo narrative):
+Deferred engineering (out of hackathon scope):
 
-1. Exporters
-2. LSP / VS Code extension
-3. Production adapters (explicitly out of hackathon scope)
+1. Full LSP / VS Code extension
+2. Production security-product adapters
+3. Additional export formats (JSON/PDF/etc.)
 
 ## Package status
 
-| Package or application      | Status                                        | Notes                                                                         |
-| --------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------- |
-| `apps/playground`           | COMPLETE for demo scope                       | Scenario switcher; detection, chain, response, and test panels                |
-| `packages/lexer`            | COMPLETE                                      | Tokenization and lexical diagnostics                                          |
-| `packages/ast`              | COMPLETE                                      | Typed AST, diagnostics, product naming                                        |
-| `packages/parser`           | COMPLETE                                      | Recursive-descent parsing                                                     |
-| `packages/checker`          | COMPLETE                                      | Semantic validation                                                           |
-| `packages/interpreter`      | COMPLETE for current hackathon/demo semantics | Chain search across observe/`then` stages; requirements part of chain success |
-| `packages/runtime`          | COMPLETE                                      | Mock response execution including identity containment                        |
-| `packages/test-runner`      | COMPLETE                                      | Workspace-scoped `expect rule … to_match`                                     |
-| `packages/language-service` | PARTIAL                                       | Thin analyze facade                                                           |
-| `packages/exporters`        | NOT STARTED                                   | Scaffold only                                                                 |
+| Package or application      | Status                                        | Notes                                                            |
+| --------------------------- | --------------------------------------------- | ---------------------------------------------------------------- |
+| `apps/playground`           | COMPLETE for demo scope                       | Scenario switcher; Detection / chain / response; Markdown export |
+| `packages/lexer`            | COMPLETE                                      | Tokenization and lexical diagnostics                             |
+| `packages/ast`              | COMPLETE                                      | Typed AST, diagnostics (`BITPALL####`), product naming           |
+| `packages/parser`           | COMPLETE                                      | Recursive-descent parsing                                        |
+| `packages/checker`          | COMPLETE                                      | Semantic validation                                              |
+| `packages/interpreter`      | COMPLETE for current hackathon/demo semantics | Chain search; requirements; structured explanations              |
+| `packages/runtime`          | COMPLETE                                      | Mock response execution including identity containment           |
+| `packages/test-runner`      | COMPLETE                                      | Workspace-scoped `expect rule … to_match`                        |
+| `packages/language-service` | PARTIAL                                       | Thin analyze facade                                              |
+| `packages/exporters`        | COMPLETE for Markdown                         | Deterministic Markdown detection reports                         |
 
 ## Example status
 
 | Example               | Status   | Notes                                      |
 | --------------------- | -------- | ------------------------------------------ |
-| exploit-to-ransomware | COMPLETE | Full fixture + integration coverage        |
+| exploit-to-ransomware | COMPLETE | Full fixture + negatives + integration     |
 | account-takeover      | COMPLETE | Positive + negative fixtures + integration |
 | data-exfiltration     | COMPLETE | Positive + negative fixtures + integration |
 
 ## Verification status
 
-| Check                    | Status   | Last run   | Notes                                                         |
-| ------------------------ | -------- | ---------- | ------------------------------------------------------------- |
-| Dependency installation  | COMPLETE | 2026-08-11 | `pnpm install`                                                |
-| Formatting               | COMPLETE | 2026-08-11 | `pnpm format:check`                                           |
-| Linting                  | COMPLETE | 2026-08-11 | `pnpm lint`                                                   |
-| Type checking            | COMPLETE | 2026-08-11 | `pnpm check`                                                  |
-| Unit + integration tests | COMPLETE | 2026-08-11 | **114** tests passed (14 files); 0 failed                     |
-| Production build         | COMPLETE | 2026-08-11 | Package tsc + playground Vite build                           |
-| Example runner           | COMPLETE | 2026-08-11 | ransomware, account-takeover, and data-exfiltration all MATCH |
-| Playground launch        | PARTIAL  | 2026-08-11 | Build verified; interactive `pnpm dev` not smoke-tested in CI |
+| Check                | Status                | Notes                                                                |
+| -------------------- | --------------------- | -------------------------------------------------------------------- |
+| Automated validation | COMPLETE (2026-08-26) | format/lint/check/test(**132**)/build/verify + all three examples    |
+| Manual playground QA | REMAINING             | Human browser pass still required before submission                  |
+| Production readiness | NOT CLAIMED           | Simulation-only prototype                                            |
 
 ## Known limitations
 
-- Exporters are not implemented.
-- No LSP / VS Code extension / vendor adapters.
+- Responses are simulated only — no live EDR/IAM/network mutation.
+- No full LSP / VS Code extension / vendor adapters.
+- Exporter currently supports Markdown only (not JSON/PDF/HTML).
 - Soft keywords may appear in identifier positions.
 - Diagnostic codes use the `BITPALL` prefix (for example `BITPALL1001`).
 - No backwards-compatibility guarantee while experimental.
 - Interpreter matching is complete for hackathon/demo semantics, not production SIEM-scale workloads.
-- Final demo packaging (video / Devpost copy) remains.
 
 ## Language design consideration
 
@@ -130,6 +123,7 @@ Optional later engineering (not required for the demo narrative):
 - Tests must not depend on access to real security platforms.
 - Examples must use fictional organizations, assets, accounts, and event data.
 - Secrets and credentials must never be committed.
+- Exported reports must not claim live infrastructure changes.
 
 ## Current blockers
 
@@ -137,21 +131,15 @@ No blockers have been recorded.
 
 ## Architectural decisions
 
-### ADR-001 through ADR-014
+### ADR-001 through ADR-015
 
-Prior ADRs remain accepted (TypeScript, hand-written parser, simulation-first runtime, package boundaries, product naming, soft keywords, source exports, min-chain confidence, telemetry gating, chronological multi-stage matching, observe/then backtracking, workspace-scoped tests, separated playground operations).
+Prior ADRs remain accepted (TypeScript, hand-written parser, simulation-first runtime, package boundaries, product naming, soft keywords, source exports, min-chain confidence, telemetry gating, chronological multi-stage matching, observe/then backtracking, workspace-scoped tests, separated playground operations, reusable identity containment actions).
 
-### ADR-015: Reusable identity containment actions
+### ADR-016: Markdown exporter as presentation layer
 
 **Status:** Accepted
 
-Account-takeover needs identity response concepts beyond endpoint isolation. The language adds:
-
-- `revoke sessions user <asset>;` — simulated immediately
-- `disable account <asset>;` — always pending approval
-- `reenable account <asset>;` — rollback metadata only
-
-These are reusable identity primitives, not scenario-specific hacks. Session revocation has no rollback because revoked sessions cannot be restored.
+`@bitpall/exporters` renders structured `ProgramNode` + `InterpretResult` (+ optional events) into deterministic Markdown. It must not re-implement detection evaluation. Browser download UX lives in the playground only.
 
 ## Technical debt
 
@@ -162,15 +150,14 @@ These are reusable identity primitives, not scenario-specific hacks. Session rev
 
 ### TD-002: Exporters remain scaffolds
 
-- Status: Open
+- Status: **Resolved** (2026-08-26) — Markdown exporter implemented
 - Introduced: 2026-08-06
-- Updated: 2026-08-11 — deferred behind demo packaging
 
 ### TD-003: Playground uses a plain textarea
 
 - Status: Open
 - Introduced: 2026-08-06
-- Updated: 2026-08-11 — acceptable for demo; richer editor optional
+- Updated: 2026-08-26 — acceptable for demo; richer editor optional
 
 ### TD-004: Approval statement semantics are ambiguous
 
@@ -179,30 +166,24 @@ These are reusable identity primitives, not scenario-specific hacks. Session rev
 - Affected area: grammar / respond blocks / runtime interpretation
 - Reason: current syntax conflates gate declaration and action proposal
 - Consequence: demo narrative must carefully explain pending approval behaviour
-- Recommended resolution: dedicated language-design pass after demo packaging
+- Recommended resolution: dedicated language-design pass after submission
 
 ## Change log
 
-### 2026-08-11 (multi-scenario demo expansion — uncommitted)
+### 2026-08-26 (Markdown exporter + final polish)
 
-- Added account-takeover and data-exfiltration end-to-end examples with negative fixtures.
-- Added identity response/rollback actions across AST → parser → checker → interpreter → runtime.
-- Playground scenario switcher plus detection summary, event chain, and response plan panels.
-- README repositioned around three domains and simulation-only safety.
-- Verification: 114 tests; all three example runners MATCH.
+- Implemented deterministic Markdown detection-report exporter.
+- Wired **Export Markdown** into the playground.
+- Expanded workspace verification to all first-party packages.
+- Updated README / package docs / project status for exporter completion.
 
-### 2026-08-11 (then-stage chain-search — committed as `55e3f33`)
+### 2026-08-11 (multi-scenario + explainability)
+
+- Account-takeover and data-exfiltration examples; identity responses; playground explainability panels.
+
+### 2026-08-11 (then-stage chain-search)
 
 - Interpreter searches then-stage candidates with recursive backtracking.
-- Requirement failures continue the search; responses emit only for successful chains.
-
-### 2026-08-11 (correctness fix pass — committed as `3831e62`)
-
-- Observe-candidate backtracking, workspace-scoped rule IDs, separated playground operations.
-
-### 2026-08-11 (semantics hardening)
-
-- Ordered multi-stage matching, telemetry gating, min confidence, event validation, test-runner.
 
 ### 2026-08-06
 

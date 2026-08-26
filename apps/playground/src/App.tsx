@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { PRODUCT_NAME } from "@bitpall/ast";
+import { exportDocumentation } from "@bitpall/exporters";
 import { AdvancedSection } from "./components/AdvancedSection";
+import { ExportMarkdownButton } from "./components/ExportMarkdownButton";
 import { ScenarioSelector } from "./components/ScenarioSelector";
 import { AstPanel } from "./components/visualization/AstPanel";
 import { DiagnosticsPanel } from "./components/visualization/DiagnosticsPanel";
@@ -11,10 +14,46 @@ import { SourceEditor } from "./components/editor/SourceEditor";
 import { TestResultsPanel } from "./components/simulator/TestResultsPanel";
 import { TracePanel } from "./components/simulator/TracePanel";
 import { usePlayground } from "./hooks/usePlayground";
+import { downloadMarkdown, reportFilename } from "./lib/exportReport";
+import { getScenario } from "./lib/scenarios";
 
 export function App() {
   const { state, setSource, setEventsJson, loadScenario, check, runSimulation, runTests } =
     usePlayground();
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const canExport = state.program !== null && state.interpretResult !== null;
+
+  const handleExport = () => {
+    if (!state.program || !state.interpretResult) {
+      setExportError("Run Simulation before exporting a Markdown report.");
+      return;
+    }
+    try {
+      const scenario = getScenario(state.scenarioId);
+      const matched =
+        state.interpretResult.ruleResults.find((rule) => rule.matched) ??
+        state.interpretResult.ruleResults[0];
+      const markdown = exportDocumentation({
+        format: "markdown",
+        program: state.program,
+        result: state.interpretResult,
+        events: state.parsedEvents,
+        scenarioName: scenario.label,
+        ruleName: matched?.ruleName,
+      });
+      const filename = reportFilename(matched?.ruleName ?? scenario.id);
+      downloadMarkdown(filename, markdown);
+      setExportError(null);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : String(error));
+    }
+  };
+
+  const handleLoadScenario = (scenarioId: typeof state.scenarioId) => {
+    setExportError(null);
+    loadScenario(scenarioId);
+  };
 
   return (
     <div className="layout">
@@ -44,7 +83,7 @@ export function App() {
         or terminates processes for real.
       </div>
 
-      <ScenarioSelector selectedId={state.scenarioId} onSelect={loadScenario} />
+      <ScenarioSelector selectedId={state.scenarioId} onSelect={handleLoadScenario} />
 
       <div className="grid">
         <SourceEditor value={state.source} onChange={setSource} />
@@ -56,6 +95,8 @@ export function App() {
         <EventChain result={state.interpretResult} events={state.parsedEvents} />
         <ResponsePanel result={state.interpretResult} />
       </div>
+
+      <ExportMarkdownButton disabled={!canExport} onExport={handleExport} error={exportError} />
 
       <TestResultsPanel result={state.testResult} />
 

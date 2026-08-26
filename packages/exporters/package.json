@@ -18,6 +18,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@bitpall/ast": "workspace:*"
+    "@bitpall/ast": "workspace:*",
+    "@bitpall/interpreter": "workspace:*",
+    "@bitpall/runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@bitpall/checker": "workspace:*",
+    "@bitpall/parser": "workspace:*"
   }
 }
