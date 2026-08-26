@@ -6,6 +6,19 @@ import type {
 } from "@bitpall/ast";
 import { getProperty, type JsonObject, type JsonValue, type MockSecurityEvent } from "./events.js";
 
+export interface ConditionEvaluation {
+  readonly field: string;
+  readonly operator: ComparisonOperator;
+  readonly actual: JsonValue | undefined;
+  readonly expected: JsonValue | undefined;
+  readonly passed: boolean;
+}
+
+export interface ExpressionEvaluation {
+  readonly passed: boolean;
+  readonly conditions: readonly ConditionEvaluation[];
+}
+
 function literalValue(node: LiteralNode): JsonValue {
   switch (node.kind) {
     case "StringLiteral":
@@ -16,6 +29,25 @@ function literalValue(node: LiteralNode): JsonValue {
       return node.value;
     case "DurationLiteral":
       return node.milliseconds;
+  }
+}
+
+function describeOperand(node: ExpressionNode): string {
+  switch (node.kind) {
+    case "Identifier":
+      return node.name;
+    case "PropertyPath":
+      return node.parts.join(".");
+    case "StringLiteral":
+      return JSON.stringify(node.value);
+    case "NumberLiteral":
+      return String(node.value);
+    case "BooleanLiteral":
+      return String(node.value);
+    case "DurationLiteral":
+      return node.raw;
+    default:
+      return "<expr>";
   }
 }
 
@@ -59,31 +91,59 @@ function compare(
   }
 }
 
-export function evaluateExpression(expression: ExpressionNode, event: MockSecurityEvent): boolean {
-  switch (expression.kind) {
-    case "ComparisonExpression":
-      return evaluateComparison(expression, event);
-    case "BinaryExpression": {
-      const left = evaluateExpression(expression.left, event);
-      const right = evaluateExpression(expression.right, event);
-      return expression.operator === "and" ? left && right : left || right;
-    }
-    case "UnaryExpression":
-      return !evaluateExpression(expression.operand, event);
-    case "BooleanLiteral":
-      return expression.value;
-    default:
-      return false;
-  }
-}
-
 function evaluateComparison(
   expression: ComparisonExpressionNode,
   event: MockSecurityEvent,
-): boolean {
-  const left = resolveOperand(expression.left, event);
-  const right = resolveOperand(expression.right, event);
-  return compare(left, expression.operator, right);
+): ConditionEvaluation {
+  const actual = resolveOperand(expression.left, event);
+  const expected = resolveOperand(expression.right, event);
+  return {
+    field: describeOperand(expression.left),
+    operator: expression.operator,
+    actual,
+    expected,
+    passed: compare(actual, expression.operator, expected),
+  };
+}
+
+/**
+ * Evaluate a condition expression and retain leaf comparison details for explainability.
+ */
+export function evaluateExpressionDetailed(
+  expression: ExpressionNode,
+  event: MockSecurityEvent,
+): ExpressionEvaluation {
+  switch (expression.kind) {
+    case "ComparisonExpression": {
+      const condition = evaluateComparison(expression, event);
+      return { passed: condition.passed, conditions: [condition] };
+    }
+    case "BinaryExpression": {
+      const left = evaluateExpressionDetailed(expression.left, event);
+      const right = evaluateExpressionDetailed(expression.right, event);
+      const passed =
+        expression.operator === "and" ? left.passed && right.passed : left.passed || right.passed;
+      return {
+        passed,
+        conditions: [...left.conditions, ...right.conditions],
+      };
+    }
+    case "UnaryExpression": {
+      const operand = evaluateExpressionDetailed(expression.operand, event);
+      return {
+        passed: !operand.passed,
+        conditions: operand.conditions,
+      };
+    }
+    case "BooleanLiteral":
+      return { passed: expression.value, conditions: [] };
+    default:
+      return { passed: false, conditions: [] };
+  }
+}
+
+export function evaluateExpression(expression: ExpressionNode, event: MockSecurityEvent): boolean {
+  return evaluateExpressionDetailed(expression, event).passed;
 }
 
 export function eventMatchesTypeAndCondition(

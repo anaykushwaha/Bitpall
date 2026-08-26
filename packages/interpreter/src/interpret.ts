@@ -12,7 +12,13 @@ import {
   type ResponseAction,
   type ResponseExecutor,
 } from "@bitpall/runtime";
-import { chainConfidence, countDistinctSources, eventMatchesTypeAndCondition } from "./evaluate.js";
+import {
+  chainConfidence,
+  countDistinctSources,
+  evaluateExpressionDetailed,
+  eventMatchesTypeAndCondition,
+  type ConditionEvaluation,
+} from "./evaluate.js";
 import { eventTimeMs, orderEvents, type MockSecurityEvent } from "./events.js";
 
 export interface TraceEntry {
@@ -20,6 +26,24 @@ export interface TraceEntry {
   readonly ruleName: string;
   readonly message: string;
   readonly eventIds?: readonly string[];
+}
+
+export interface RequirementEvaluation {
+  readonly metric: "confidence" | "sources";
+  readonly operator: string;
+  readonly expected: number;
+  readonly actual: number;
+  readonly passed: boolean;
+}
+
+export interface StageMatchExplanation {
+  readonly stageKind: "observe" | "then";
+  readonly stageIndex: number;
+  readonly eventType: string;
+  readonly eventId: string;
+  readonly within?: string;
+  readonly matched: boolean;
+  readonly conditions: readonly ConditionEvaluation[];
 }
 
 export interface RuleMatchResult {
@@ -31,6 +55,8 @@ export interface RuleMatchResult {
   readonly confidence: number;
   readonly sources: number;
   readonly responses: readonly ActionResult[];
+  readonly stageExplanations: readonly StageMatchExplanation[];
+  readonly requirementEvaluations: readonly RequirementEvaluation[];
 }
 
 export interface InterpretResult {
@@ -51,6 +77,23 @@ interface ChainAttempt {
   readonly chain: readonly MockSecurityEvent[];
   readonly confidence: number;
   readonly sources: number;
+  readonly stageExplanations: readonly StageMatchExplanation[];
+  readonly requirementEvaluations: readonly RequirementEvaluation[];
+}
+
+function emptyRuleResult(workspaceName: string, ruleName: string, reason: string): RuleMatchResult {
+  return {
+    workspaceName,
+    ruleName,
+    matched: false,
+    reason,
+    matchedEventIds: [],
+    confidence: 0,
+    sources: 0,
+    responses: [],
+    stageExplanations: [],
+    requirementEvaluations: [],
+  };
 }
 
 function compareRequirement(metricValue: number, clause: RequireClauseNode): boolean {
@@ -92,26 +135,87 @@ function isDeclaredTelemetry(
   return typeof event.source === "string" && allowedSources.has(event.source);
 }
 
-function requirementsPass(
+function evaluateRequirements(
   rule: RuleDeclarationNode,
   chain: readonly MockSecurityEvent[],
-):
-  | { ok: true; confidence: number; sources: number }
-  | { ok: false; reason: string; confidence: number; sources: number } {
+): {
+  ok: boolean;
+  confidence: number;
+  sources: number;
+  reason: string;
+  evaluations: readonly RequirementEvaluation[];
+} {
   const confidence = chainConfidence(chain);
   const sources = countDistinctSources(chain);
-  for (const req of rule.requires) {
-    const value = req.metric === "confidence" ? confidence : sources;
-    if (!compareRequirement(value, req)) {
-      return {
-        ok: false,
-        reason: `Requirement failed: ${req.metric} ${req.operator} ${req.value.value} (actual ${value})`,
-        confidence,
-        sources,
-      };
-    }
+  const evaluations: RequirementEvaluation[] = rule.requires.map((req) => {
+    const actual = req.metric === "confidence" ? confidence : sources;
+    const expected = req.value.value;
+    return {
+      metric: req.metric,
+      operator: req.operator,
+      expected,
+      actual,
+      passed: compareRequirement(actual, req),
+    };
+  });
+
+  const failed = evaluations.find((evaluation) => !evaluation.passed);
+  if (failed) {
+    return {
+      ok: false,
+      confidence,
+      sources,
+      reason: `Requirement failed: ${failed.metric} ${failed.operator} ${failed.expected} (actual ${failed.actual})`,
+      evaluations,
+    };
   }
-  return { ok: true, confidence, sources };
+
+  return {
+    ok: true,
+    confidence,
+    sources,
+    reason: "All stages and requirements satisfied",
+    evaluations,
+  };
+}
+
+function explainMatchedChain(
+  rule: RuleDeclarationNode,
+  chain: readonly MockSecurityEvent[],
+): StageMatchExplanation[] {
+  const stages: StageMatchExplanation[] = [];
+  if (!rule.observe || chain.length === 0) {
+    return stages;
+  }
+
+  const observeEvent = chain[0]!;
+  const observeEval = evaluateExpressionDetailed(rule.observe.condition, observeEvent);
+  stages.push({
+    stageKind: "observe",
+    stageIndex: 0,
+    eventType: rule.observe.eventType.name,
+    eventId: observeEvent.id,
+    matched: observeEval.passed,
+    conditions: observeEval.conditions,
+  });
+
+  for (let i = 0; i < rule.thenStages.length; i += 1) {
+    const stage = rule.thenStages[i]!;
+    const event = chain[i + 1];
+    if (!event) break;
+    const evaluation = evaluateExpressionDetailed(stage.condition, event);
+    stages.push({
+      stageKind: "then",
+      stageIndex: i + 1,
+      eventType: stage.eventType.name,
+      eventId: event.id,
+      within: stage.within.raw,
+      matched: evaluation.passed,
+      conditions: evaluation.conditions,
+    });
+  }
+
+  return stages;
 }
 
 function thenCandidates(
@@ -146,23 +250,27 @@ function searchThenStages(
   let lastFailureChain: readonly MockSecurityEvent[] = [observeEvent];
   let lastFailureConfidence = chainConfidence([observeEvent]);
   let lastFailureSources = countDistinctSources([observeEvent]);
+  let lastRequirementEvaluations: readonly RequirementEvaluation[] = [];
 
   function search(stageIndex: number, chain: readonly MockSecurityEvent[]): ChainAttempt | null {
     if (stageIndex >= rule.thenStages.length) {
-      const req = requirementsPass(rule, chain);
+      const req = evaluateRequirements(rule, chain);
       if (req.ok) {
         return {
           matched: true,
-          reason: "All stages and requirements satisfied",
+          reason: req.reason,
           chain,
           confidence: req.confidence,
           sources: req.sources,
+          stageExplanations: explainMatchedChain(rule, chain),
+          requirementEvaluations: req.evaluations,
         };
       }
       lastFailureReason = req.reason;
       lastFailureChain = chain;
       lastFailureConfidence = req.confidence;
       lastFailureSources = req.sources;
+      lastRequirementEvaluations = req.evaluations;
       return null;
     }
 
@@ -193,6 +301,7 @@ function searchThenStages(
       lastFailureChain = chain;
       lastFailureConfidence = chainConfidence(chain);
       lastFailureSources = countDistinctSources(chain);
+      lastRequirementEvaluations = [];
       return null;
     }
 
@@ -216,6 +325,8 @@ function searchThenStages(
     chain: lastFailureChain,
     confidence: lastFailureConfidence,
     sources: lastFailureSources,
+    stageExplanations: explainMatchedChain(rule, lastFailureChain),
+    requirementEvaluations: lastRequirementEvaluations,
   };
 }
 
@@ -390,16 +501,7 @@ function evaluateRule(
   const workspaceName = workspace.name.name;
 
   if (!rule.observe) {
-    return {
-      workspaceName,
-      ruleName,
-      matched: false,
-      reason: "Rule has no observe stage",
-      matchedEventIds: [],
-      confidence: 0,
-      sources: 0,
-      responses: [],
-    };
+    return emptyRuleResult(workspaceName, ruleName, "Rule has no observe stage");
   }
 
   const eligible = events.filter((event) => {
@@ -435,16 +537,7 @@ function evaluateRule(
       ruleName,
       message: "Observe stage did not match any events",
     });
-    return {
-      workspaceName,
-      ruleName,
-      matched: false,
-      reason: "Observe stage did not match",
-      matchedEventIds: [],
-      confidence: 0,
-      sources: 0,
-      responses: [],
-    };
+    return emptyRuleResult(workspaceName, ruleName, "Observe stage did not match");
   }
 
   let lastFailure: ChainAttempt | null = null;
@@ -474,6 +567,8 @@ function evaluateRule(
         confidence: attempt.confidence,
         sources: attempt.sources,
         responses,
+        stageExplanations: attempt.stageExplanations,
+        requirementEvaluations: attempt.requirementEvaluations,
       };
     }
 
@@ -502,6 +597,8 @@ function evaluateRule(
     confidence: lastFailure?.confidence ?? 0,
     sources: lastFailure?.sources ?? 0,
     responses: [],
+    stageExplanations: lastFailure?.stageExplanations ?? [],
+    requirementEvaluations: lastFailure?.requirementEvaluations ?? [],
   };
 }
 

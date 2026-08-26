@@ -5,6 +5,8 @@ export {
   type InterpretResult,
   type RuleMatchResult,
   type TraceEntry,
+  type StageMatchExplanation,
+  type RequirementEvaluation,
 } from "./interpret.js";
 export {
   eventTimeMs,
@@ -17,10 +19,13 @@ export {
 } from "./events.js";
 export {
   evaluateExpression,
+  evaluateExpressionDetailed,
   eventMatchesTypeAndCondition,
   chainConfidence,
   aggregateConfidence,
   countDistinctSources,
+  type ConditionEvaluation,
+  type ExpressionEvaluation,
 } from "./evaluate.js";
 export {
   validateMockEvents,

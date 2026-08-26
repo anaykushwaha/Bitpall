@@ -6,6 +6,7 @@ interface ResponsePanelProps {
 }
 
 export function ResponsePanel({ result }: ResponsePanelProps) {
+  const matched = result?.ruleResults.some((rule) => rule.matched) ?? false;
   const actions = result
     ? [
         ...result.auditLog
@@ -21,13 +22,15 @@ export function ResponsePanel({ result }: ResponsePanelProps) {
       <h2>Response plan</h2>
       {!result ? (
         <p className="muted">Run Simulation to inspect simulated responses.</p>
+      ) : !matched ? (
+        <p className="muted">No response actions were planned — the policy did not match.</p>
       ) : actions.length === 0 ? (
-        <p className="muted">No responses proposed (rule did not match or has no respond block).</p>
+        <p className="muted">No response actions were planned for this rule.</p>
       ) : (
         <div className="stack">
-          <ActionGroup title="Executed" items={grouped.executed} />
+          <ActionGroup title="Simulated" items={grouped.simulated} />
           <ActionGroup title="Pending approval" items={grouped.pending} />
-          <ActionGroup title="Rolled back" items={grouped.rolledBack} />
+          <ActionGroup title="Rollback recorded" items={grouped.rolledBack} />
           <ActionGroup title="Failed" items={grouped.failed} />
         </div>
       )}
@@ -40,7 +43,7 @@ function ActionGroup({
   items,
 }: {
   title: string;
-  items: ReturnType<typeof groupActions>["executed"];
+  items: ReturnType<typeof groupActions>["simulated"];
 }) {
   if (items.length === 0) return null;
   return (

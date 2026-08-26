@@ -1,4 +1,5 @@
 import { PRODUCT_NAME } from "@bitpall/ast";
+import { AdvancedSection } from "./components/AdvancedSection";
 import { ScenarioSelector } from "./components/ScenarioSelector";
 import { AstPanel } from "./components/visualization/AstPanel";
 import { DiagnosticsPanel } from "./components/visualization/DiagnosticsPanel";
@@ -38,8 +39,9 @@ export function App() {
       </header>
 
       <div className="warning" role="status">
-        Response actions are simulated only. This playground never isolates devices, disables
-        accounts, revokes real sessions, terminates processes, or contacts security platforms.
+        <strong>Simulation mode.</strong> Responses are evaluated with a mock executor. No external
+        systems are modified — Bitpall never isolates devices, disables accounts, revokes sessions,
+        or terminates processes for real.
       </div>
 
       <ScenarioSelector selectedId={state.scenarioId} onSelect={loadScenario} />
@@ -49,22 +51,22 @@ export function App() {
         <EventInput value={state.eventsJson} onChange={setEventsJson} error={state.eventError} />
       </div>
 
-      <div className="grid">
-        <DiagnosticsPanel diagnostics={state.diagnostics} />
-        <AstPanel program={state.program} />
-      </div>
-
-      <div className="grid">
+      <div className="story-grid">
         <DetectionSummary result={state.interpretResult} />
         <EventChain result={state.interpretResult} events={state.parsedEvents} />
-      </div>
-
-      <div className="grid">
         <ResponsePanel result={state.interpretResult} />
-        <TracePanel result={state.interpretResult} />
       </div>
 
       <TestResultsPanel result={state.testResult} />
+
+      <DiagnosticsPanel diagnostics={state.diagnostics} />
+
+      <AdvancedSection>
+        <div className="grid">
+          <AstPanel program={state.program} />
+          <TracePanel result={state.interpretResult} />
+        </div>
+      </AdvancedSection>
     </div>
   );
 }

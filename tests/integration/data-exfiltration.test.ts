@@ -66,6 +66,9 @@ describe("data-exfiltration integration", () => {
     expect(rule?.sources).toBe(expected.sources);
     expect(rule?.matchedEventIds).toEqual(expected.matchedEventIds);
 
+    expect(rule?.stageExplanations.length).toBeGreaterThan(0);
+    expect(rule?.requirementEvaluations.every((evaluation) => evaluation.passed)).toBe(true);
+
     for (const action of expected.simulatedActions) {
       expect(
         testResult.interpretResult.auditLog.some(
@@ -116,6 +119,7 @@ describe("data-exfiltration integration", () => {
     const result = interpret(loadPolicy(), loadEvents("events-low-confidence.json"));
     expect(result.ruleResults[0]?.matched).toBe(false);
     expect(result.ruleResults[0]?.reason).toMatch(/confidence/i);
+    expect(result.ruleResults[0]?.requirementEvaluations.some((r) => !r.passed)).toBe(true);
   });
 
   it("does not execute responses unless the full chain matches", () => {

@@ -15,7 +15,11 @@ export function EventInput({ value, onChange, error }: EventInputProps) {
         onChange={(event) => onChange(event.target.value)}
         spellCheck={false}
       />
-      {error ? <p className="diag-error">{error}</p> : null}
+      {error ? (
+        <p className="diag-error">{error}</p>
+      ) : value.trim().length === 0 ? (
+        <p className="muted">No events are loaded. Paste a JSON array of mock security events.</p>
+      ) : null}
     </section>
   );
 }

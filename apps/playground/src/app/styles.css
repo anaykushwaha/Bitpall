@@ -111,10 +111,51 @@ pre {
   gap: 1rem;
 }
 
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 @media (max-width: 960px) {
-  .grid {
+  .grid,
+  .story-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.eval-list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 0.8rem;
+}
+
+.eval-block {
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--line);
+}
+
+.advanced {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 0.75rem 0.9rem;
+}
+
+.advanced summary {
+  cursor: pointer;
+  font-family: "IBM Plex Serif", Georgia, serif;
+  font-weight: 600;
+}
+
+.advanced-body {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.85rem;
 }
 
 .panel {

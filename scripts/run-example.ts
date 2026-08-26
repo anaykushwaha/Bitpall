@@ -82,11 +82,35 @@ for (const rule of testResult.interpretResult.ruleResults) {
   console.log(
     `${rule.matched ? "MATCH" : "NO MATCH"} ${rule.ruleName}: ${rule.reason} (confidence=${rule.confidence}, sources=${rule.sources})`,
   );
+  for (const stage of rule.stageExplanations) {
+    const label = stage.stageKind === "observe" ? "observe" : "then";
+    console.log(
+      `  ${stage.matched ? "✓" : "✗"} ${label} ${stage.eventType} ← ${stage.eventId}${stage.within ? ` within ${stage.within}` : ""}`,
+    );
+    for (const condition of stage.conditions) {
+      console.log(
+        `      ${condition.passed ? "✓" : "✗"} ${condition.field} ${JSON.stringify(condition.actual)} ${condition.operator} ${JSON.stringify(condition.expected)}`,
+      );
+    }
+  }
+  for (const requirement of rule.requirementEvaluations) {
+    console.log(
+      `  ${requirement.passed ? "✓" : "✗"} ${requirement.metric} ${requirement.actual} ${requirement.operator} ${requirement.expected}`,
+    );
+  }
 }
 
-console.log("\n=== Simulated responses (audit) ===");
+console.log("\n=== Simulated responses ===");
 for (const entry of testResult.interpretResult.auditLog) {
-  console.log(`[${entry.id}] ${entry.result.status}: ${entry.result.message}`);
+  if (entry.result.status === "simulated") {
+    console.log(`[simulated] ${entry.result.message}`);
+  }
+}
+for (const pending of testResult.interpretResult.pendingApprovals) {
+  console.log(`[pending_approval] ${pending.message}`);
+}
+for (const rollback of testResult.interpretResult.rollbackActions) {
+  console.log(`[recorded_rollback] ${rollback.message}`);
 }
 
 console.log("\nWARNING: Response actions are simulated only. No real systems were modified.");

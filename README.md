@@ -2,103 +2,128 @@
 
 **Behavioral Intelligence & Threat Protection Automation Logic Language**
 
-Bitpall is a cybersecurity domain-specific language for expressing deterministic multi-stage threat detection and safe automated response policies.
+Bitpall is a cybersecurity domain-specific language for expressing multi-stage behavioral threat detection and automated response logic declaratively — with explainable matching and a simulation-only response model.
 
-Security automation is often split across vendor-specific rule formats, scripts, and response APIs. Bitpall explores a safer declarative language for detection-and-response workflows with explicit evidence, confidence, approval, rollback, and testing semantics.
+> **Safety:** All responses in this repository are simulated through a mock executor. Bitpall does not isolate real endpoints, disable real accounts, revoke real sessions, terminate real processes, or modify external systems.
 
-> **Safety:** All responses in this repository are simulated. Bitpall does not disable real users, isolate real machines, terminate real processes, revoke real sessions, or block real network traffic.
+## Problem
 
-### What BITPALL stands for
+Security teams often need to detect multi-stage attacks (exploit → lateral behavior → impact) and decide what to do next. That logic is usually scattered across vendor consoles, scripts, and tickets. It is hard to:
 
-| Piece                       | Meaning                                                                         |
-| --------------------------- | ------------------------------------------------------------------------------- |
-| **Behavioral Intelligence** | Models meaningful sequences of security behavior.                               |
-| **Threat Protection**       | Expresses defensive detection and containment policies.                         |
-| **Automation Logic**        | Defines deterministic responses, approvals, rollback, and tests.                |
-| **Language**                | Provides a purpose-built cybersecurity DSL rather than vendor-specific scripts. |
-
-## What problem does it solve?
-
-Detection content and response playbooks are usually scattered across consoles, tickets, and ad-hoc scripts. That makes it hard to:
-
-- express ordered attack sequences with timing windows
+- express ordered event chains with timing windows in one place
 - require confidence and multi-source evidence before acting
-- keep approval gates and rollback steps next to the detection logic
-- replay deterministic security tests
+- keep approval-gated high-impact actions next to the detection rule
+- explain exactly why a chain matched
+- replay the same scenario deterministically
 
-## What is Bitpall?
+## Solution
 
-Bitpall is an experimental defensive cybersecurity DSL. Policies describe:
+Bitpall is a small declarative DSL for detection-and-response policies. A policy describes what to observe, which follow-on stages must occur, what evidence thresholds apply, which responses to plan, and which actions need approval — then evaluates mock security events through a deterministic interpreter.
 
-1. what to observe
-2. which follow-on events must occur
-3. evidence thresholds
-4. simulated containment responses
-5. approval-gated high-impact actions
-6. rollback metadata
-7. executable `test` expectations
+## Bitpall example
 
-## Why a DSL?
+```bitpall
+workspace corporate_network {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
 
-A small domain language keeps detection, evidence, and response reviewable in one place—without binding the prototype to a single vendor API.
+  rule suspicious_encryption_chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
 
-## What the demo shows
+    require confidence >= 0.80;
+    require sources >= 2;
 
-Three end-to-end scenarios on the same language and mock runtime:
+    respond {
+      isolate endpoint finance_laptop;
+      preserve evidence;
+      approval required for terminate_process;
+    }
+  }
+}
+```
 
-| Example                  | What it demonstrates                                                     |
-| ------------------------ | ------------------------------------------------------------------------ |
-| **Exploit → Ransomware** | Ordered process/encryption chain with endpoint isolation                 |
-| **Account Takeover**     | Suspicious identity chain with session revoke + pending account disable  |
-| **Data Exfiltration**    | Sensitive access → staging → outbound transfer with endpoint containment |
+## How it works
 
-Open the playground, switch scenarios, run simulation, and inspect detection / event chain / response plan.
+```text
+.bitpall source
+      ↓
+Lexer → Parser → Typed AST → Semantic check
+      ↓
+Interpreter evaluates mock security events
+      ↓
+Detection result + matched event chain
+      ↓
+Structured condition & requirement explanations
+      ↓
+Response plan (simulated / pending approval)
+      ↓
+Mock executor audit log (no real side effects)
+```
 
-## How do I run it?
+Judges can inspect **Detection → Event chain → Response** in the playground. Compiler diagnostics stay visible by default; AST and raw detection traces live under **Advanced**.
 
-Requires Node.js 20+ and pnpm 9+.
+## Three scenarios
+
+| Scenario                 | Story                                                                                                |
+| ------------------------ | ---------------------------------------------------------------------------------------------------- |
+| **Exploit → Ransomware** | PowerShell start → encrypted file write; isolate endpoint; terminate process pending approval        |
+| **Account Takeover**     | Suspicious login → MFA failure → privilege change; revoke sessions; disable account pending approval |
+| **Data Exfiltration**    | Sensitive access → staging → large outbound transfer; isolate endpoint                               |
+
+Each scenario includes positive matches plus negative cases (incomplete chains, low confidence, benign traffic).
+
+## Safety model
+
+Bitpall uses a `ResponseExecutor` abstraction with a **mock/simulation executor** only. Planned actions are recorded as `simulated`, `pending_approval`, or `recorded_rollback`. Nothing in this repo talks to real security products or host APIs.
+
+## Setup
+
+Requires **Node.js 20+** and **pnpm 9.15** (see `packageManager` in `package.json`).
 
 ```bash
 pnpm install
-pnpm test
-pnpm build
-pnpm dev                 # playground at http://localhost:5173
+```
+
+## Usage
+
+```bash
+pnpm dev                         # playground at http://localhost:5173
 pnpm example:ransomware
 pnpm example:account-takeover
 pnpm example:data-exfiltration
 ```
 
-## Architecture
+In the playground: pick a scenario, edit policy/events if desired, then **Run Simulation** or **Run Tests**.
 
-```text
-Bitpall source
-        ↓
-      Lexer
-        ↓
-      Parser
-        ↓
-       AST
-        ↓
- Semantic checker
-        ↓
-    Interpreter  →  Mock runtime  →  Audit / responses
-        ↓
-   Test runner (expect rule … to_match)
+## Testing
+
+```bash
+pnpm format:check
+pnpm lint
+pnpm check
+pnpm test
+pnpm build
+pnpm verify
 ```
 
-| Path                        | Role                                            |
-| --------------------------- | ----------------------------------------------- |
-| `packages/lexer`            | Tokenization                                    |
-| `packages/ast`              | Typed AST, diagnostics, product naming          |
-| `packages/parser`           | Recursive-descent parser                        |
-| `packages/checker`          | Semantic validation                             |
-| `packages/interpreter`      | Deterministic event-chain matching              |
-| `packages/runtime`          | Mock response executor and audit log            |
-| `packages/test-runner`      | Replay DSL tests                                |
-| `packages/language-service` | Thin analyze API                                |
-| `packages/exporters`        | Scaffold only                                   |
-| `apps/playground`           | Browser editor and demo simulator               |
-| `examples/`                 | Ransomware, account-takeover, data-exfiltration |
+`pnpm verify` checks workspace package wiring. Integration tests cover all three example scenarios.
+
+## Architecture
+
+| Path                        | Role                                                   |
+| --------------------------- | ------------------------------------------------------ |
+| `packages/lexer`            | Tokenization                                           |
+| `packages/ast`              | Typed AST, diagnostics (`BITPALL####`), product naming |
+| `packages/parser`           | Recursive-descent parser                               |
+| `packages/checker`          | Semantic validation                                    |
+| `packages/interpreter`      | Event-chain matching + structured explanations         |
+| `packages/runtime`          | Mock response executor and audit log                   |
+| `packages/test-runner`      | `expect rule … to_match` replay                        |
+| `packages/language-service` | Thin analyze API (not a full LSP)                      |
+| `packages/exporters`        | Scaffold only — not implemented                        |
+| `apps/playground`           | Browser editor and demo simulator                      |
+| `examples/`                 | Three core cybersecurity demos                         |
 
 ## Documentation
 
@@ -109,11 +134,18 @@ Bitpall source
 - [Language reference](./docs/language-reference.md)
 - [Runtime model](./docs/runtime-model.md)
 - [Safety model](./docs/safety-model.md)
-- [Project status](./PROJECT_STATUS.md)
 
-## Current maturity
+## Limitations (deliberate scope)
 
-Hackathon/demo prototype. See [PROJECT_STATUS.md](./PROJECT_STATUS.md). Not production-ready.
+This is a hackathon/demo prototype. It does **not** currently include:
+
+- production security-product integrations
+- real endpoint / identity / network mutation
+- exporters / Markdown export
+- full Language Server Protocol or VS Code extension
+- modules, macros, or package publishing
+
+Those are intentional boundaries for this stage — not incomplete claims of production readiness.
 
 ## License
 
