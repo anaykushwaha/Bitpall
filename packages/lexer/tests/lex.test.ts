@@ -66,12 +66,12 @@ describe("lexer", () => {
 
   it("reports invalid characters", () => {
     const { diagnostics } = lexText("workspace @ foo");
-    expect(diagnostics.some((d) => d.code === "AEGIS1001")).toBe(true);
+    expect(diagnostics.some((d) => d.code === "BITPALL1001")).toBe(true);
   });
 
   it("reports unterminated strings", () => {
     const { diagnostics } = lexText('"unterminated');
-    expect(diagnostics.some((d) => d.code === "AEGIS1002")).toBe(true);
+    expect(diagnostics.some((d) => d.code === "BITPALL1002")).toBe(true);
   });
 
   it("recognizes booleans", () => {

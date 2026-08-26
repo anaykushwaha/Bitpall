@@ -92,7 +92,7 @@ export function lex(source: SourceFile): LexResult {
       if (!terminated) {
         diagnostics.push(
           createDiagnostic({
-            code: "AEGIS1002",
+            code: "BITPALL1002",
             severity: "error",
             message: "Unterminated string literal",
             fileName,
@@ -130,7 +130,7 @@ export function lex(source: SourceFile): LexResult {
         if (numericPart.includes(".")) {
           diagnostics.push(
             createDiagnostic({
-              code: "AEGIS1003",
+              code: "BITPALL1003",
               severity: "error",
               message: `Invalid duration '${numericPart}${unit}'; durations must use whole numbers`,
               fileName,
@@ -232,7 +232,7 @@ export function lex(source: SourceFile): LexResult {
 
     diagnostics.push(
       createDiagnostic({
-        code: "AEGIS1001",
+        code: "BITPALL1001",
         severity: "error",
         message: `Invalid character '${ch}'`,
         fileName,

@@ -132,19 +132,19 @@ describe("parser", () => {
 }`,
       ),
     );
-    expect(result.diagnostics.some((d) => d.code === "AEGIS2002")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL2002")).toBe(true);
   });
 
   it("reports missing braces", () => {
     const result = parse(
       createSourceFile("bad.bitpall", 'workspace w { asset endpoint x { criticality = "high"; }'),
     );
-    expect(result.diagnostics.some((d) => d.code === "AEGIS2003")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL2003")).toBe(true);
   });
 
   it("reports unexpected tokens", () => {
     const result = parse(createSourceFile("bad.bitpall", "workspace w { foobar x; }"));
-    expect(result.diagnostics.some((d) => d.code === "AEGIS2001")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL2001")).toBe(true);
   });
 
   it("recovers after malformed members and continues parsing", () => {
@@ -174,6 +174,6 @@ describe("parser", () => {
 }`,
       ),
     );
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3011")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3011")).toBe(true);
   });
 });

@@ -4,4 +4,4 @@
 export const PRODUCT_NAME = "Bitpall" as const;
 export const PRODUCT_ID = "bitpall" as const;
 export const FILE_EXTENSION = ".bitpall" as const;
-export const DIAGNOSTIC_PREFIX = "AEGIS" as const;
+export const DIAGNOSTIC_PREFIX = "BITPALL" as const;

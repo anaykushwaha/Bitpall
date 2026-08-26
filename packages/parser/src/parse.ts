@@ -74,7 +74,7 @@ class Parser {
           workspaces.push(ws);
         }
       } else {
-        this.error(this.peek(), "AEGIS2001", `Unexpected token '${this.peek().lexeme}'`);
+        this.error(this.peek(), "BITPALL2001", `Unexpected token '${this.peek().lexeme}'`);
         if (!this.synchronizeTo(["workspace"])) {
           break;
         }
@@ -123,7 +123,7 @@ class Parser {
       } else {
         this.error(
           this.peek(),
-          "AEGIS2001",
+          "BITPALL2001",
           `Unexpected token '${this.peek().lexeme}' in workspace body`,
         );
         this.synchronizeInBlock();
@@ -222,7 +222,7 @@ class Parser {
           if (observe) {
             this.diagnostics.push(
               createDiagnostic({
-                code: "AEGIS3011",
+                code: "BITPALL3011",
                 severity: "error",
                 message: `Rule '${name?.name ?? "<unknown>"}' already has an observe stage`,
                 fileName: this.fileName,
@@ -253,7 +253,7 @@ class Parser {
           if (respond) {
             this.diagnostics.push(
               createDiagnostic({
-                code: "AEGIS3011",
+                code: "BITPALL3011",
                 severity: "error",
                 message: `Rule '${name?.name ?? "<unknown>"}' already has a respond block`,
                 fileName: this.fileName,
@@ -278,7 +278,7 @@ class Parser {
           if (rollback) {
             this.diagnostics.push(
               createDiagnostic({
-                code: "AEGIS3011",
+                code: "BITPALL3011",
                 severity: "error",
                 message: `Rule '${name?.name ?? "<unknown>"}' already has a rollback block`,
                 fileName: this.fileName,
@@ -300,7 +300,7 @@ class Parser {
       } else {
         this.error(
           this.peek(),
-          "AEGIS2001",
+          "BITPALL2001",
           `Unexpected token '${this.peek().lexeme}' in rule body`,
         );
         this.synchronizeInBlock();
@@ -370,14 +370,14 @@ class Parser {
       this.advance();
       metric = "sources";
     } else {
-      this.error(this.peek(), "AEGIS2001", "Expected 'confidence' or 'sources' after require");
+      this.error(this.peek(), "BITPALL2001", "Expected 'confidence' or 'sources' after require");
       this.synchronizeTo([";"]);
       if (this.checkPunctuation(";")) this.advance();
       return null;
     }
     const opTok = this.peek();
     if (opTok.kind !== "Operator" || !COMPARISON_OPS.has(opTok.lexeme)) {
-      this.error(opTok, "AEGIS2001", "Expected comparison operator in require clause");
+      this.error(opTok, "BITPALL2001", "Expected comparison operator in require clause");
       this.synchronizeTo([";"]);
       if (this.checkPunctuation(";")) this.advance();
       return null;
@@ -471,7 +471,7 @@ class Parser {
       } else {
         this.error(
           this.peek(),
-          "AEGIS2001",
+          "BITPALL2001",
           `Unsupported response statement '${this.peek().lexeme}'`,
         );
         this.synchronizeInBlock();
@@ -524,7 +524,7 @@ class Parser {
       } else {
         this.error(
           this.peek(),
-          "AEGIS2001",
+          "BITPALL2001",
           `Unsupported rollback statement '${this.peek().lexeme}'`,
         );
         this.synchronizeInBlock();
@@ -564,7 +564,7 @@ class Parser {
       } else {
         this.error(
           this.peek(),
-          "AEGIS2001",
+          "BITPALL2001",
           `Unexpected token '${this.peek().lexeme}' in test body`,
         );
         this.synchronizeInBlock();
@@ -659,7 +659,7 @@ class Parser {
           right,
         };
       }
-      this.error(op, "AEGIS2001", "Invalid comparison operands");
+      this.error(op, "BITPALL2001", "Invalid comparison operands");
       return left;
     }
     return left;
@@ -685,7 +685,7 @@ class Parser {
       if (this.peek().kind === "Keyword" && !this.isPathStartKeyword(this.peek().lexeme)) {
         this.error(
           this.peek(),
-          "AEGIS2001",
+          "BITPALL2001",
           `Unexpected keyword '${this.peek().lexeme}' in expression`,
         );
         this.advance();
@@ -693,7 +693,11 @@ class Parser {
       }
       return this.parsePropertyPathOrIdentifier();
     }
-    this.error(this.peek(), "AEGIS2001", `Unexpected token '${this.peek().lexeme}' in expression`);
+    this.error(
+      this.peek(),
+      "BITPALL2001",
+      `Unexpected token '${this.peek().lexeme}' in expression`,
+    );
     this.advance();
     return null;
   }
@@ -713,7 +717,7 @@ class Parser {
   private parsePropertyPathOrIdentifier(): PropertyPathNode | IdentifierNode | null {
     const first = this.peek();
     if (first.kind !== "Identifier" && first.kind !== "Keyword") {
-      this.error(first, "AEGIS2001", "Expected identifier");
+      this.error(first, "BITPALL2001", "Expected identifier");
       return null;
     }
     this.advance();
@@ -724,7 +728,7 @@ class Parser {
       this.advance();
       const part = this.peek();
       if (part.kind !== "Identifier" && part.kind !== "Keyword") {
-        this.error(part, "AEGIS2001", "Expected property name after '.'");
+        this.error(part, "BITPALL2001", "Expected property name after '.'");
         break;
       }
       this.advance();
@@ -761,7 +765,7 @@ class Parser {
     if (tok.kind === "Duration") {
       return this.parseDuration();
     }
-    this.error(tok, "AEGIS2001", "Expected literal");
+    this.error(tok, "BITPALL2001", "Expected literal");
     this.advance();
     return null;
   }
@@ -769,7 +773,7 @@ class Parser {
   private parseNumberLiteral(): NumberLiteralNode | null {
     const tok = this.peek();
     if (tok.kind !== "Number") {
-      this.error(tok, "AEGIS2001", "Expected number");
+      this.error(tok, "BITPALL2001", "Expected number");
       return null;
     }
     this.advance();
@@ -784,13 +788,13 @@ class Parser {
   private parseDuration(): DurationLiteralNode | null {
     const tok = this.peek();
     if (tok.kind !== "Duration") {
-      this.error(tok, "AEGIS2001", "Expected duration literal (e.g. 30s, 5m, 1h)");
+      this.error(tok, "BITPALL2001", "Expected duration literal (e.g. 30s, 5m, 1h)");
       return null;
     }
     this.advance();
     const match = /^(\d+)([smh])$/.exec(tok.lexeme);
     if (!match) {
-      this.error(tok, "AEGIS2001", `Invalid duration '${tok.lexeme}'`);
+      this.error(tok, "BITPALL2001", `Invalid duration '${tok.lexeme}'`);
       return null;
     }
     const value = Number(match[1]);
@@ -808,7 +812,7 @@ class Parser {
   private parseIdentifier(): IdentifierNode | null {
     const tok = this.peek();
     if (tok.kind !== "Identifier" && tok.kind !== "Keyword") {
-      this.error(tok, "AEGIS2001", `Expected identifier, found '${tok.lexeme}'`);
+      this.error(tok, "BITPALL2001", `Expected identifier, found '${tok.lexeme}'`);
       return null;
     }
     this.advance();
@@ -823,7 +827,7 @@ class Parser {
     if (this.checkKeyword(keyword)) {
       return this.advance();
     }
-    this.error(this.peek(), "AEGIS2001", `Expected '${keyword}', found '${this.peek().lexeme}'`);
+    this.error(this.peek(), "BITPALL2001", `Expected '${keyword}', found '${this.peek().lexeme}'`);
     return this.peek();
   }
 
@@ -832,7 +836,11 @@ class Parser {
       return this.advance();
     }
     const code =
-      lexeme === ";" ? "AEGIS2002" : lexeme === "{" || lexeme === "}" ? "AEGIS2003" : "AEGIS2001";
+      lexeme === ";"
+        ? "BITPALL2002"
+        : lexeme === "{" || lexeme === "}"
+          ? "BITPALL2003"
+          : "BITPALL2001";
     const message =
       lexeme === ";"
         ? "Missing semicolon"
@@ -900,7 +908,7 @@ class Parser {
     while (!this.isAtEnd()) {
       this.recoverySteps += 1;
       if (this.recoverySteps >= this.maxRecoverySteps) {
-        this.error(this.peek(), "AEGIS2004", "Parser recovery limit exceeded");
+        this.error(this.peek(), "BITPALL2004", "Parser recovery limit exceeded");
         return false;
       }
       const tok = this.peek();
@@ -919,7 +927,7 @@ class Parser {
     while (!this.isAtEnd()) {
       this.recoverySteps += 1;
       if (this.recoverySteps >= this.maxRecoverySteps) {
-        this.error(this.peek(), "AEGIS2004", "Parser recovery limit exceeded");
+        this.error(this.peek(), "BITPALL2004", "Parser recovery limit exceeded");
         return;
       }
       const tok = this.peek();

@@ -34,7 +34,7 @@ export function check(program: ProgramNode, source: SourceFile): CheckResult {
       : `Duplicate declaration '${dup.duplicate.name}' in scope '${dup.scope}' (${dup.duplicateKind} conflicts with existing ${dup.existing.kind})`;
     diagnostics.push(
       createDiagnostic({
-        code: "AEGIS3001",
+        code: "BITPALL3001",
         severity: "error",
         message,
         fileName: source.fileName,
@@ -57,7 +57,7 @@ export function check(program: ProgramNode, source: SourceFile): CheckResult {
     if (symbols.telemetry.size === 0) {
       diagnostics.push(
         createDiagnostic({
-          code: "AEGIS3010",
+          code: "BITPALL3010",
           severity: "error",
           message: `Workspace '${workspace.name.name}' must declare at least one telemetry source`,
           fileName: source.fileName,
@@ -78,7 +78,7 @@ export function check(program: ProgramNode, source: SourceFile): CheckResult {
           if (!symbols.rules.has(statement.ruleName.name)) {
             diagnostics.push(
               createDiagnostic({
-                code: "AEGIS3003",
+                code: "BITPALL3003",
                 severity: "error",
                 message: `Unknown rule '${statement.ruleName.name}'`,
                 fileName: source.fileName,
@@ -104,7 +104,7 @@ function checkTelemetry(
   if (!sourceProp) {
     diagnostics.push(
       createDiagnostic({
-        code: "AEGIS3013",
+        code: "BITPALL3013",
         severity: "error",
         message: `Telemetry '${telemetry.name.name}' must declare a source property`,
         fileName: source.fileName,
@@ -117,7 +117,7 @@ function checkTelemetry(
   if (sourceProp.value.kind !== "StringLiteral") {
     diagnostics.push(
       createDiagnostic({
-        code: "AEGIS3013",
+        code: "BITPALL3013",
         severity: "error",
         message: `Telemetry '${telemetry.name.name}' source must be a string literal`,
         fileName: source.fileName,
@@ -131,7 +131,7 @@ function checkTelemetry(
   if (sourceValue.length === 0) {
     diagnostics.push(
       createDiagnostic({
-        code: "AEGIS3013",
+        code: "BITPALL3013",
         severity: "error",
         message: `Telemetry '${telemetry.name.name}' source must not be empty`,
         fileName: source.fileName,
@@ -145,7 +145,7 @@ function checkTelemetry(
   if (existing) {
     diagnostics.push(
       createDiagnostic({
-        code: "AEGIS3014",
+        code: "BITPALL3014",
         severity: "error",
         message: `Duplicate telemetry source string '${sourceValue}'`,
         fileName: source.fileName,
@@ -173,7 +173,7 @@ function checkRule(
   if (rule.thenStages.length > 0 && !rule.observe) {
     diagnostics.push(
       createDiagnostic({
-        code: "AEGIS3007",
+        code: "BITPALL3007",
         severity: "error",
         message: `Rule '${rule.name.name}' has a then stage without an observe stage`,
         fileName: source.fileName,
@@ -185,7 +185,7 @@ function checkRule(
   if (rule.rollback && !rule.respond) {
     diagnostics.push(
       createDiagnostic({
-        code: "AEGIS3008",
+        code: "BITPALL3008",
         severity: "error",
         message: `Rule '${rule.name.name}' has a rollback block without a response block`,
         fileName: source.fileName,
@@ -198,7 +198,7 @@ function checkRule(
     if (stage.within.value <= 0) {
       diagnostics.push(
         createDiagnostic({
-          code: "AEGIS3005",
+          code: "BITPALL3005",
           severity: "error",
           message: `Invalid duration '${stage.within.raw}'; value must be positive`,
           fileName: source.fileName,
@@ -213,7 +213,7 @@ function checkRule(
       if (req.value.value < 0 || req.value.value > 1) {
         diagnostics.push(
           createDiagnostic({
-            code: "AEGIS3004",
+            code: "BITPALL3004",
             severity: "error",
             message: `Confidence value ${req.value.value} is outside allowed range 0.0 to 1.0`,
             fileName: source.fileName,
@@ -226,7 +226,7 @@ function checkRule(
       if (!Number.isInteger(req.value.value)) {
         diagnostics.push(
           createDiagnostic({
-            code: "AEGIS3012",
+            code: "BITPALL3012",
             severity: "error",
             message: `Sources requirement ${req.value.raw} must be an integer`,
             fileName: source.fileName,
@@ -236,7 +236,7 @@ function checkRule(
       } else if (req.value.value < 0) {
         diagnostics.push(
           createDiagnostic({
-            code: "AEGIS3012",
+            code: "BITPALL3012",
             severity: "error",
             message: `Sources requirement ${req.value.value} must be non-negative`,
             fileName: source.fileName,
@@ -257,7 +257,7 @@ function checkRule(
         if (!assets.has(statement.target.name)) {
           diagnostics.push(
             createDiagnostic({
-              code: "AEGIS3002",
+              code: "BITPALL3002",
               severity: "error",
               message: `Unknown asset '${statement.target.name}'`,
               fileName: source.fileName,
@@ -270,7 +270,7 @@ function checkRule(
         if (!SUPPORTED_RESPONSE_ACTIONS.has(actionKey)) {
           diagnostics.push(
             createDiagnostic({
-              code: "AEGIS4001",
+              code: "BITPALL4001",
               severity: "error",
               message: `Unsupported response action '${actionKey}'`,
               fileName: source.fileName,
@@ -290,7 +290,7 @@ function checkRule(
       ) {
         diagnostics.push(
           createDiagnostic({
-            code: "AEGIS3002",
+            code: "BITPALL3002",
             severity: "error",
             message: `Unknown asset '${statement.target.name}'`,
             fileName: source.fileName,

@@ -53,7 +53,7 @@ workspace w {
   asset endpoint laptop { criticality = "low"; }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3001")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3001")).toBe(true);
   });
 
   it("detects cross-kind duplicate declaration", () => {
@@ -66,7 +66,7 @@ workspace w {
   }
 }
 `);
-    const dup = result.diagnostics.find((d) => d.code === "AEGIS3001");
+    const dup = result.diagnostics.find((d) => d.code === "BITPALL3001");
     expect(dup).toBeTruthy();
     expect(dup?.message).toMatch(/rule conflicts with existing asset/i);
   });
@@ -80,7 +80,7 @@ workspace first {
   telemetry edr { source = "b"; }
 }
 `);
-    const dup = result.diagnostics.find((d) => d.code === "AEGIS3001");
+    const dup = result.diagnostics.find((d) => d.code === "BITPALL3001");
     expect(dup).toBeTruthy();
     expect(dup?.related?.[0]?.range.start.line).toBe(2);
   });
@@ -95,7 +95,7 @@ workspace w {
   }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3011")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3011")).toBe(true);
   });
 
   it("detects duplicate respond", () => {
@@ -109,7 +109,7 @@ workspace w {
   }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3011")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3011")).toBe(true);
   });
 
   it("detects duplicate rollback", () => {
@@ -125,7 +125,7 @@ workspace w {
   }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3011")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3011")).toBe(true);
   });
 
   it("detects unknown assets", () => {
@@ -138,7 +138,7 @@ workspace w {
   }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3002")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3002")).toBe(true);
   });
 
   it("detects unknown rules in tests", () => {
@@ -148,7 +148,7 @@ workspace w {
   test t { expect rule missing_rule to_match; }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3003")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3003")).toBe(true);
   });
 
   it("detects invalid confidence", () => {
@@ -161,7 +161,7 @@ workspace w {
   }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3004")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3004")).toBe(true);
   });
 
   it("detects invalid duration", () => {
@@ -174,7 +174,7 @@ workspace w {
   }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3005")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3005")).toBe(true);
   });
 
   it("detects rollback without response", () => {
@@ -188,7 +188,7 @@ workspace w {
   }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3008")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3008")).toBe(true);
   });
 
   it("rejects decimal source thresholds", () => {
@@ -201,7 +201,7 @@ workspace w {
   }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3012")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3012")).toBe(true);
   });
 
   it("rejects negative source thresholds when a negative literal is present", () => {
@@ -249,7 +249,7 @@ workspace w {
         ],
       };
       const result = check(mutated, source);
-      expect(result.diagnostics.some((d) => d.code === "AEGIS3012")).toBe(true);
+      expect(result.diagnostics.some((d) => d.code === "BITPALL3012")).toBe(true);
     }
   });
 
@@ -263,7 +263,7 @@ workspace w {
   }
 }
 `);
-    expect(result.diagnostics.filter((d) => d.code === "AEGIS3012")).toEqual([]);
+    expect(result.diagnostics.filter((d) => d.code === "BITPALL3012")).toEqual([]);
   });
 
   it("rejects duplicate telemetry source strings", () => {
@@ -273,7 +273,7 @@ workspace w {
   telemetry other { source = "shared"; }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3014")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3014")).toBe(true);
   });
 
   it("rejects malformed telemetry source property", () => {
@@ -282,7 +282,7 @@ workspace w {
   telemetry edr { source = 12; }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3013")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3013")).toBe(true);
   });
 
   it("rejects missing telemetry source property", () => {
@@ -291,6 +291,6 @@ workspace w {
   telemetry edr { label = "x"; }
 }
 `);
-    expect(result.diagnostics.some((d) => d.code === "AEGIS3013")).toBe(true);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3013")).toBe(true);
   });
 });

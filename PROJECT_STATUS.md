@@ -109,7 +109,7 @@ Optional later engineering (not required for the demo narrative):
 - Exporters are not implemented.
 - No LSP / VS Code extension / vendor adapters.
 - Soft keywords may appear in identifier positions.
-- Diagnostic codes still use the historical `AEGIS` prefix (semantic identifiers, not product branding).
+- Diagnostic codes use the `BITPALL` prefix (for example `BITPALL1001`).
 - No backwards-compatibility guarantee while experimental.
 - Interpreter matching is complete for hackathon/demo semantics, not production SIEM-scale workloads.
 - Final demo packaging (video / Devpost copy) remains.

@@ -26,12 +26,12 @@ describe("source model", () => {
 describe("diagnostics", () => {
   it("formats diagnostics with location", () => {
     const message = formatDiagnostic({
-      code: "AEGIS1001",
+      code: "BITPALL1001",
       severity: "error",
       message: "Invalid character",
       fileName: "policy.bitpall",
       range: rangeOf("x", 0, 1),
     });
-    expect(message).toBe("policy.bitpall:1:1: error AEGIS1001: Invalid character");
+    expect(message).toBe("policy.bitpall:1:1: error BITPALL1001: Invalid character");
   });
 });

@@ -5,7 +5,7 @@ describe("language-service", () => {
   it("returns diagnostics for invalid source", () => {
     const result = analyzeSource("x.bitpall", "workspace {");
     expect(result.diagnostics.length).toBeGreaterThan(0);
-    expect(result.formattedDiagnostics[0]).toContain("AEGIS");
+    expect(result.formattedDiagnostics[0]).toContain("BITPALL");
   });
 
   it("analyzes a minimal valid workspace", () => {

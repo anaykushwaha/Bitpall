@@ -2,38 +2,38 @@ import type { SourceRange } from "./source.js";
 
 /**
  * Diagnostic code convention:
- * AEGIS1xxx — lexer
- * AEGIS2xxx — parser
- * AEGIS3xxx — checker
- * AEGIS4xxx — runtime / interpreter
+ * BITPALL1xxx — lexer
+ * BITPALL2xxx — parser
+ * BITPALL3xxx — checker
+ * BITPALL4xxx — runtime / interpreter
  */
 export type DiagnosticSeverity = "error" | "warning" | "info";
 
 export type DiagnosticCode =
-  | "AEGIS1001"
-  | "AEGIS1002"
-  | "AEGIS1003"
-  | "AEGIS2001"
-  | "AEGIS2002"
-  | "AEGIS2003"
-  | "AEGIS2004"
-  | "AEGIS3001"
-  | "AEGIS3002"
-  | "AEGIS3003"
-  | "AEGIS3004"
-  | "AEGIS3005"
-  | "AEGIS3006"
-  | "AEGIS3007"
-  | "AEGIS3008"
-  | "AEGIS3009"
-  | "AEGIS3010"
-  | "AEGIS3011"
-  | "AEGIS3012"
-  | "AEGIS3013"
-  | "AEGIS3014"
-  | "AEGIS4001"
-  | "AEGIS4002"
-  | "AEGIS4003";
+  | "BITPALL1001"
+  | "BITPALL1002"
+  | "BITPALL1003"
+  | "BITPALL2001"
+  | "BITPALL2002"
+  | "BITPALL2003"
+  | "BITPALL2004"
+  | "BITPALL3001"
+  | "BITPALL3002"
+  | "BITPALL3003"
+  | "BITPALL3004"
+  | "BITPALL3005"
+  | "BITPALL3006"
+  | "BITPALL3007"
+  | "BITPALL3008"
+  | "BITPALL3009"
+  | "BITPALL3010"
+  | "BITPALL3011"
+  | "BITPALL3012"
+  | "BITPALL3013"
+  | "BITPALL3014"
+  | "BITPALL4001"
+  | "BITPALL4002"
+  | "BITPALL4003";
 
 export interface RelatedLocation {
   readonly fileName: string;
