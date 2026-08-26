@@ -37,3 +37,15 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Verify workspace
+        run: pnpm verify
+
+      - name: Run ransomware scenario
+        run: pnpm example:ransomware
+
+      - name: Run account takeover scenario
+        run: pnpm example:account-takeover
+
+      - name: Run data exfiltration scenario
+        run: pnpm example:data-exfiltration

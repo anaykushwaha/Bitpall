@@ -121,9 +121,12 @@ pnpm check
 pnpm test
 pnpm build
 pnpm verify
+pnpm example:ransomware
+pnpm example:account-takeover
+pnpm example:data-exfiltration
 ```
 
-`pnpm verify` checks workspace package wiring. Integration tests cover all three example scenarios.
+`pnpm verify` checks workspace package wiring. The three `example:*` commands run the end-to-end demo scenarios (also enforced in CI). Integration tests cover positive and negative cases. Manual playground browser QA is separate and remains a human step.
 
 ## Architecture
 

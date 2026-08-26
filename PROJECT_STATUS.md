@@ -91,11 +91,13 @@ Deferred engineering (out of hackathon scope):
 
 ## Verification status
 
-| Check                | Status                | Notes                                                                |
-| -------------------- | --------------------- | -------------------------------------------------------------------- |
-| Automated validation | COMPLETE (2026-08-26) | format/lint/check/test(**132**)/build/verify + all three examples    |
-| Manual playground QA | REMAINING             | Human browser pass still required before submission                  |
-| Production readiness | NOT CLAIMED           | Simulation-only prototype                                            |
+| Check                       | Status                | Notes                                                                                           |
+| --------------------------- | --------------------- | ----------------------------------------------------------------------------------------------- |
+| Engineering validation (CI) | COMPLETE (2026-08-26) | format, lint, check, test (**132**), build, verify, plus all three `example:*` scenario runners |
+| Manual playground QA        | REMAINING             | Human browser pass still required; not covered by CI                                            |
+| Production readiness        | NOT CLAIMED           | Simulation-only prototype                                                                       |
+
+CI (`.github/workflows/ci.yml`) enforces the same engineering validation sequence on push/PR. Scenario runners are automated in CI; interactive playground UX checks are not.
 
 ## Known limitations
 
@@ -169,6 +171,11 @@ Prior ADRs remain accepted (TypeScript, hand-written parser, simulation-first ru
 - Recommended resolution: dedicated language-design pass after submission
 
 ## Change log
+
+### 2026-08-26 (CI validation hardening)
+
+- GitHub Actions CI now also runs `pnpm verify` and all three `example:*` scenario runners.
+- Clarified engineering (CI) vs manual playground QA in project status / README.
 
 ### 2026-08-26 (Markdown exporter + final polish)
 
