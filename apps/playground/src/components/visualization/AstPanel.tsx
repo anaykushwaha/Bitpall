@@ -9,7 +9,7 @@ export function AstPanel({ program }: AstPanelProps) {
     <section className="panel">
       <h2>AST</h2>
       {program ? (
-        <pre>{JSON.stringify(program, null, 2)}</pre>
+        <pre className="dev-output dev-output--ast">{JSON.stringify(program, null, 2)}</pre>
       ) : (
         <p className="muted">Run Check to view the abstract syntax tree.</p>
       )}

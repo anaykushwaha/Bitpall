@@ -11,7 +11,7 @@ export function TracePanel({ result }: TracePanelProps) {
       {!result ? (
         <p className="muted">Run Simulation to see the detailed interpreter trace.</p>
       ) : (
-        <pre className="trace">
+        <pre className="dev-output dev-output--trace">
           {result.trace.map((entry) => `[${entry.ruleName}] ${entry.message}`).join("\n") ||
             "No trace entries."}
         </pre>

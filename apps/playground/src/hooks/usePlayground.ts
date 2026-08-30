@@ -1,5 +1,10 @@
 import { useState } from "react";
 import { DEFAULT_EVENTS_JSON, DEFAULT_POLICY } from "../lib/defaults";
+import {
+  createScenarioState,
+  invalidateAfterEventEdit,
+  invalidateAfterSourceEdit,
+} from "../lib/playgroundState";
 import { compileSource, executeTests, parseEventsJson, simulateProgram } from "../lib/pipeline";
 import { DEFAULT_SCENARIO_ID, getScenario, type ScenarioId } from "../lib/scenarios";
 import type { PlaygroundState } from "../types/playground";
@@ -18,26 +23,16 @@ export function usePlayground() {
   });
 
   const setSource = (source: string) => {
-    setState((prev) => ({ ...prev, source }));
+    setState((prev) => invalidateAfterSourceEdit(prev, source));
   };
 
   const setEventsJson = (eventsJson: string) => {
-    setState((prev) => ({ ...prev, eventsJson }));
+    setState((prev) => invalidateAfterEventEdit(prev, eventsJson));
   };
 
   const loadScenario = (scenarioId: ScenarioId) => {
     const scenario = getScenario(scenarioId);
-    setState({
-      scenarioId,
-      source: scenario.policy,
-      eventsJson: scenario.eventsJson,
-      diagnostics: [],
-      program: null,
-      interpretResult: null,
-      testResult: null,
-      parsedEvents: [],
-      eventError: null,
-    });
+    setState(createScenarioState(scenarioId, scenario.policy, scenario.eventsJson));
   };
 
   const check = () => {

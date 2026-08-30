@@ -66,12 +66,22 @@ pre {
   resize: vertical;
 }
 
+.panel pre:not(.dev-output),
+pre.trace:not(.dev-output) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+}
+
 .layout {
   max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
   padding: 1.25rem;
   display: grid;
   gap: 1rem;
+  min-width: 0;
 }
 
 .header {
@@ -109,12 +119,14 @@ pre {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 1rem;
+  min-width: 0;
 }
 
 .story-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+  min-width: 0;
 }
 
 @media (max-width: 960px) {
@@ -144,6 +156,8 @@ pre {
   background: var(--panel);
   border: 1px solid var(--line);
   padding: 0.75rem 0.9rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .advanced summary {
@@ -156,6 +170,53 @@ pre {
   display: grid;
   gap: 1rem;
   margin-top: 0.85rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.advanced-body .grid {
+  min-width: 0;
+}
+
+.advanced .panel {
+  min-height: auto;
+}
+
+.dev-output {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  overflow: auto;
+  white-space: pre;
+  resize: none;
+  background: #faf9f6;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  padding: 0.75rem;
+  color: var(--ink);
+}
+
+.dev-output--ast {
+  max-height: 28rem;
+}
+
+.dev-output--trace {
+  max-height: 20rem;
+}
+
+@media (max-width: 768px) {
+  .dev-output--ast {
+    max-height: 22rem;
+  }
+
+  .dev-output--trace {
+    max-height: 16rem;
+  }
 }
 
 .panel {
@@ -163,6 +224,8 @@ pre {
   border: 1px solid var(--line);
   padding: 0.9rem;
   min-height: 12rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .panel h2 {
@@ -322,11 +385,6 @@ pre {
 .export-bar .diag-error {
   flex-basis: 100%;
   margin: 0;
-}
-
-.trace {
-  max-height: 18rem;
-  overflow: auto;
 }
 
 select:focus,

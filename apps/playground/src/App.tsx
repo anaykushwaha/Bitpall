@@ -14,6 +14,7 @@ import { SourceEditor } from "./components/editor/SourceEditor";
 import { TestResultsPanel } from "./components/simulator/TestResultsPanel";
 import { TracePanel } from "./components/simulator/TracePanel";
 import { usePlayground } from "./hooks/usePlayground";
+import { canExportMarkdown } from "./lib/playgroundState";
 import { downloadMarkdown, reportFilename } from "./lib/exportReport";
 import { getScenario } from "./lib/scenarios";
 
@@ -22,7 +23,17 @@ export function App() {
     usePlayground();
   const [exportError, setExportError] = useState<string | null>(null);
 
-  const canExport = state.program !== null && state.interpretResult !== null;
+  const canExport = canExportMarkdown(state);
+
+  const handleSourceChange = (source: string) => {
+    setExportError(null);
+    setSource(source);
+  };
+
+  const handleEventsJsonChange = (eventsJson: string) => {
+    setExportError(null);
+    setEventsJson(eventsJson);
+  };
 
   const handleExport = () => {
     if (!state.program || !state.interpretResult) {
@@ -86,8 +97,12 @@ export function App() {
       <ScenarioSelector selectedId={state.scenarioId} onSelect={handleLoadScenario} />
 
       <div className="grid">
-        <SourceEditor value={state.source} onChange={setSource} />
-        <EventInput value={state.eventsJson} onChange={setEventsJson} error={state.eventError} />
+        <SourceEditor value={state.source} onChange={handleSourceChange} />
+        <EventInput
+          value={state.eventsJson}
+          onChange={handleEventsJsonChange}
+          error={state.eventError}
+        />
       </div>
 
       <div className="story-grid">
