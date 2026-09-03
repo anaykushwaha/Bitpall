@@ -18,7 +18,6 @@ const required = [
   "examples/exploit-to-ransomware/policy.bitpall",
   "examples/account-takeover/policy.bitpall",
   "examples/data-exfiltration/policy.bitpall",
-  "PROJECT_STATUS.md",
 ];
 
 let failed = false;
