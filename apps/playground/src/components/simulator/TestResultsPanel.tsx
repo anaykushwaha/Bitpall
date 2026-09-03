@@ -33,6 +33,15 @@ export function TestResultsPanel({ result }: TestResultsPanelProps) {
                   {test.passed ? "PASS" : "FAIL"}
                 </strong>{" "}
                 {test.testName}
+                {!test.passed && (
+                  <ul className="eval-list">
+                    {test.assertions
+                      .filter((assertion) => !assertion.passed)
+                      .map((assertion, index) => (
+                        <li key={`${test.testName}:${index}`}>{assertion.message}</li>
+                      ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>

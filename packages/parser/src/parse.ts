@@ -6,7 +6,6 @@ import {
   type Diagnostic,
   type DurationLiteralNode,
   type DurationUnit,
-  type ExpectRuleMatchNode,
   type ExpressionNode,
   type IdentifierNode,
   type LiteralNode,
@@ -22,9 +21,11 @@ import {
   type RollbackBlockNode,
   type RollbackStatementNode,
   type RuleDeclarationNode,
+  type RuleMatchExpectation,
   type SourceFile,
   type TelemetryDeclarationNode,
   type TestDeclarationNode,
+  type TestStatementNode,
   type ThenStageNode,
   type WorkspaceDeclarationNode,
   type WorkspaceMemberNode,
@@ -544,23 +545,12 @@ class Parser {
     this.expectKeyword("test");
     const name = this.parseIdentifier();
     this.expectPunctuation("{");
-    const statements: ExpectRuleMatchNode[] = [];
+    const statements: TestStatementNode[] = [];
     while (!this.isAtEnd() && !this.checkPunctuation("}")) {
       const before = this.index;
       if (this.checkKeyword("expect")) {
-        const stmtStart = this.peek().range.start;
-        this.advance();
-        this.expectKeyword("rule");
-        const ruleName = this.parseIdentifier();
-        this.expectKeyword("to_match");
-        const end = this.expectSemicolon();
-        if (ruleName) {
-          statements.push({
-            kind: "ExpectRuleMatch",
-            range: { start: stmtStart, end: end.range.end },
-            ruleName,
-          });
-        }
+        const statement = this.parseExpectStatement();
+        if (statement) statements.push(statement);
       } else {
         this.error(
           this.peek(),
@@ -579,6 +569,63 @@ class Parser {
       name,
       statements,
     };
+  }
+
+  private parseExpectStatement(): TestStatementNode | null {
+    const stmtStart = this.peek().range.start;
+    this.advance(); // expect
+    this.expectKeyword("rule");
+    const ruleName = this.parseIdentifier();
+    if (!ruleName) {
+      this.synchronizeTo([";"]);
+      if (this.checkPunctuation(";")) this.advance();
+      return null;
+    }
+
+    if (this.checkKeyword("to_match") || this.checkKeyword("to_not_match")) {
+      const expectation: RuleMatchExpectation = this.checkKeyword("to_not_match")
+        ? "not_match"
+        : "match";
+      this.advance();
+      const end = this.expectSemicolon();
+      return {
+        kind: "ExpectRuleMatch",
+        range: { start: stmtStart, end: end.range.end },
+        ruleName,
+        expectation,
+      };
+    }
+
+    if (this.checkKeyword("confidence")) {
+      this.advance();
+      const opTok = this.peek();
+      if (opTok.kind !== "Operator" || !COMPARISON_OPS.has(opTok.lexeme)) {
+        this.error(opTok, "BITPALL2001", "Expected comparison operator in confidence assertion");
+        this.synchronizeTo([";"]);
+        if (this.checkPunctuation(";")) this.advance();
+        return null;
+      }
+      this.advance();
+      const value = this.parseNumberLiteral();
+      const end = this.expectSemicolon();
+      if (!value) return null;
+      return {
+        kind: "ExpectRuleConfidence",
+        range: { start: stmtStart, end: end.range.end },
+        ruleName,
+        operator: opTok.lexeme as ComparisonOperator,
+        value,
+      };
+    }
+
+    this.error(
+      this.peek(),
+      "BITPALL2001",
+      "Expected 'to_match', 'to_not_match', or 'confidence' in expect statement",
+    );
+    this.synchronizeTo([";"]);
+    if (this.checkPunctuation(";")) this.advance();
+    return null;
   }
 
   private parseExpression(): ExpressionNode | null {

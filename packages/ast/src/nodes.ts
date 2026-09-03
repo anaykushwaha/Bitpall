@@ -21,6 +21,7 @@ export type AstNodeKind =
   | "ReconnectAction"
   | "ReenableAccountAction"
   | "ExpectRuleMatch"
+  | "ExpectRuleConfidence"
   | "BinaryExpression"
   | "UnaryExpression"
   | "ComparisonExpression"
@@ -202,12 +203,22 @@ export interface RuleDeclarationNode extends AstNodeBase {
   readonly rollback: RollbackBlockNode | null;
 }
 
+export type RuleMatchExpectation = "match" | "not_match";
+
 export interface ExpectRuleMatchNode extends AstNodeBase {
   readonly kind: "ExpectRuleMatch";
   readonly ruleName: IdentifierNode;
+  readonly expectation: RuleMatchExpectation;
 }
 
-export type TestStatementNode = ExpectRuleMatchNode;
+export interface ExpectRuleConfidenceNode extends AstNodeBase {
+  readonly kind: "ExpectRuleConfidence";
+  readonly ruleName: IdentifierNode;
+  readonly operator: ComparisonOperator;
+  readonly value: NumberLiteralNode;
+}
+
+export type TestStatementNode = ExpectRuleMatchNode | ExpectRuleConfidenceNode;
 
 export interface TestDeclarationNode extends AstNodeBase {
   readonly kind: "TestDeclaration";

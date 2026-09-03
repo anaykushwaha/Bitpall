@@ -37,6 +37,7 @@ export const KEYWORDS = [
   "test",
   "expect",
   "to_match",
+  "to_not_match",
   "isolate",
   "endpoint",
   "preserve",

@@ -14,6 +14,6 @@ Current validation is structural and semantic:
 Planned later:
 
 - typed telemetry schemas
-- typed event payloads
+- typed event payloads (so property paths such as `file.extension` can be validated statically)
 - protected-resource kinds
 - action capability types

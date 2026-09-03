@@ -71,7 +71,7 @@ Supported statements:
 - `preserve evidence;` — simulated
 - `revoke sessions user <asset>;` — simulated identity containment
 - `disable account <asset>;` — always pending approval (simulation only)
-- `approval required for <action>;` — records a pending action
+- `approval required for <action>;` — records a proposed response pending approval (not an automatic execution gate)
 
 Supported approval action names include `terminate_process` and `disable_account`.
 
@@ -87,10 +87,18 @@ Supported statements:
 ```bitpall
 test ransomware_sequence {
   expect rule suspicious_encryption_chain to_match;
+  expect rule benign_process to_not_match;
+  expect rule suspicious_encryption_chain confidence >= 0.9;
 }
 ```
 
-`@bitpall/test-runner` executes these expectations against interpreter results.
+Bitpall test assertions can verify:
+
+- positive detections (`to_match`)
+- negative / no-match behavior (`to_not_match`)
+- confidence thresholds (`confidence` with `==`, `!=`, `>`, `>=`, `<`, `<=`)
+
+`@bitpall/test-runner` executes these expectations against the same interpreter rule results used by simulation (including the canonical confidence value).
 
 ## Operators and literals
 

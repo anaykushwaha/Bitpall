@@ -53,6 +53,10 @@ describe("test-runner", () => {
     expect(result.passed).toBe(true);
     expect(result.tests).toHaveLength(1);
     expect(result.tests[0]?.assertions[0]?.passed).toBe(true);
+    expect(result.tests[0]?.assertions[0]).toMatchObject({
+      kind: "rule_match",
+      expected: "match",
+    });
   });
 
   it("fails when the rule does not match", () => {
@@ -63,6 +67,141 @@ describe("test-runner", () => {
     expect(result.passed).toBe(false);
     expect(result.tests[0]?.assertions[0]?.actual).toBe(false);
     expect(result.tests[0]?.assertions[0]?.message).toMatch(/did not/);
+  });
+
+  it("passes to_not_match when the rule does not match", () => {
+    const program = checked(`
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  rule suspicious_encryption_chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+  }
+  test negative {
+    expect rule suspicious_encryption_chain to_not_match;
+  }
+}
+`);
+    const result = runBitpallTests({ program, events: [matchingEvents[0]!] });
+    expect(result.passed).toBe(true);
+    expect(result.tests[0]?.assertions[0]).toMatchObject({
+      kind: "rule_match",
+      expected: "not_match",
+      actual: false,
+      passed: true,
+    });
+  });
+
+  it("fails to_not_match when the rule matches", () => {
+    const program = checked(`
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  rule suspicious_encryption_chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+  }
+  test negative {
+    expect rule suspicious_encryption_chain to_not_match;
+  }
+}
+`);
+    const result = runBitpallTests({ program, events: matchingEvents });
+    expect(result.passed).toBe(false);
+    expect(result.tests[0]?.assertions[0]?.message).toMatch(/not to match, but it matched/);
+  });
+
+  it("passes confidence assertions against interpreter confidence", () => {
+    const program = checked(`
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  rule suspicious_encryption_chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+  }
+  test confidence_gate {
+    expect rule suspicious_encryption_chain confidence >= 0.9;
+    expect rule suspicious_encryption_chain confidence > 0.8;
+    expect rule suspicious_encryption_chain confidence == 0.9;
+  }
+}
+`);
+    const result = runBitpallTests({ program, events: matchingEvents });
+    expect(result.passed).toBe(true);
+    expect(result.tests[0]?.assertions).toHaveLength(3);
+    expect(result.tests[0]?.assertions.every((a) => a.kind === "rule_confidence")).toBe(true);
+  });
+
+  it("fails confidence assertions with clear diagnostics", () => {
+    const program = checked(`
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  rule suspicious_encryption_chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+  }
+  test confidence_gate {
+    expect rule suspicious_encryption_chain confidence >= 0.95;
+  }
+}
+`);
+    const result = runBitpallTests({ program, events: matchingEvents });
+    expect(result.passed).toBe(false);
+    const assertion = result.tests[0]?.assertions[0];
+    expect(assertion?.kind).toBe("rule_confidence");
+    if (assertion?.kind === "rule_confidence") {
+      expect(assertion.actual).toBe(0.9);
+      expect(assertion.message).toMatch(/confidence >= 0\.95/);
+      expect(assertion.message).toMatch(/actual confidence was 0\.90/);
+    }
+  });
+
+  it("supports confidence boundary equality and less-than comparisons", () => {
+    const program = checked(`
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  rule suspicious_encryption_chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+  }
+  test confidence_gate {
+    expect rule suspicious_encryption_chain confidence == 0.9;
+    expect rule suspicious_encryption_chain confidence <= 0.9;
+    expect rule suspicious_encryption_chain confidence < 0.95;
+    expect rule suspicious_encryption_chain confidence != 0.5;
+  }
+}
+`);
+    const result = runBitpallTests({ program, events: matchingEvents });
+    expect(result.passed).toBe(true);
+  });
+
+  it("supports multiple assertion kinds in one test", () => {
+    const program = checked(`
+workspace w {
+  telemetry edr { source = "endpoint-agent"; }
+  telemetry filesystem { source = "file-monitor"; }
+  rule suspicious_encryption_chain {
+    observe process_start where process.name == "powershell.exe";
+    then file_write where file.extension == ".encrypted" within 2m;
+  }
+  rule other {
+    observe process_start where process.name == "other.exe";
+  }
+  test mixed {
+    expect rule suspicious_encryption_chain to_match;
+    expect rule other to_not_match;
+    expect rule suspicious_encryption_chain confidence >= 0.9;
+  }
+}
+`);
+    const result = runBitpallTests({ program, events: matchingEvents });
+    expect(result.passed).toBe(true);
+    expect(result.tests[0]?.assertions).toHaveLength(3);
   });
 
   it("supports multiple expectations in one test", () => {

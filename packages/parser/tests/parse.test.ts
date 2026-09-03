@@ -117,8 +117,72 @@ describe("parser", () => {
     const test = result.program?.workspaces[0]?.members.find((m) => m.kind === "TestDeclaration");
     expect(test?.kind).toBe("TestDeclaration");
     if (test?.kind === "TestDeclaration") {
-      expect(test.statements[0]?.ruleName.name).toBe("suspicious_encryption_chain");
+      expect(test.statements[0]?.kind).toBe("ExpectRuleMatch");
+      if (test.statements[0]?.kind === "ExpectRuleMatch") {
+        expect(test.statements[0].ruleName.name).toBe("suspicious_encryption_chain");
+        expect(test.statements[0].expectation).toBe("match");
+      }
     }
+  });
+
+  it("parses to_not_match and confidence assertions", () => {
+    const result = parse(
+      createSourceFile(
+        "policy.bitpall",
+        `workspace w {
+  rule r { observe process_start where true; }
+  test t {
+    expect rule r to_match;
+    expect rule r to_not_match;
+    expect rule r confidence >= 0.9;
+    expect rule r confidence < 0.5;
+  }
+}`,
+      ),
+    );
+    expect(result.diagnostics.filter((d) => d.severity === "error")).toEqual([]);
+    const test = result.program?.workspaces[0]?.members.find((m) => m.kind === "TestDeclaration");
+    expect(test?.kind).toBe("TestDeclaration");
+    if (test?.kind !== "TestDeclaration") return;
+    expect(test.statements).toHaveLength(4);
+    expect(test.statements[0]).toMatchObject({ kind: "ExpectRuleMatch", expectation: "match" });
+    expect(test.statements[1]).toMatchObject({ kind: "ExpectRuleMatch", expectation: "not_match" });
+    expect(test.statements[2]).toMatchObject({
+      kind: "ExpectRuleConfidence",
+      operator: ">=",
+      value: { value: 0.9 },
+    });
+    expect(test.statements[3]).toMatchObject({
+      kind: "ExpectRuleConfidence",
+      operator: "<",
+      value: { value: 0.5 },
+    });
+  });
+
+  it("reports malformed confidence assertions", () => {
+    const result = parse(
+      createSourceFile(
+        "bad.bitpall",
+        `workspace w {
+  rule r { observe process_start where true; }
+  test t { expect rule r confidence; }
+}`,
+      ),
+    );
+    expect(result.diagnostics.some((d) => d.code === "BITPALL2001")).toBe(true);
+  });
+
+  it("reports invalid confidence comparators", () => {
+    const result = parse(
+      createSourceFile(
+        "bad.bitpall",
+        `workspace w {
+  rule r { observe process_start where true; }
+  test t { expect rule r confidence = 0.9; }
+}`,
+      ),
+    );
+    expect(result.diagnostics.some((d) => d.code === "BITPALL2001")).toBe(true);
   });
 
   it("reports missing semicolons", () => {

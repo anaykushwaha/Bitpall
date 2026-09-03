@@ -359,7 +359,7 @@ Bitpall is implemented as a TypeScript monorepo with separated compiler, analysi
 | `packages/checker`          | Semantic validation and policy consistency checks                       |
 | `packages/interpreter`      | Temporal event-chain matching and structured explanations               |
 | `packages/runtime`          | Safe mock response execution and audit logging                          |
-| `packages/test-runner`      | Replays policy tests such as `expect rule … to_match`                   |
+| `packages/test-runner`      | Replays policy tests (`to_match`, `to_not_match`, confidence)           |
 | `packages/language-service` | Lightweight source-analysis and diagnostic API                          |
 | `packages/exporters`        | Deterministic Markdown detection-report generation                      |
 | `apps/playground`           | Browser-based policy editor, simulator, results UI, and report download |
@@ -520,8 +520,9 @@ The current project intentionally does not provide:
 - real destructive security actions
 - a full Language Server Protocol implementation
 - a VS Code extension
-- modules, macros, or package publishing
+- modules, macros, or package publishing (Bitpall remains a single-file compilation unit; imports/modular rule packs are future work)
 - JSON/PDF or other exporter formats beyond Markdown
+- typed telemetry / event payload schemas (property paths are not schema-validated yet)
 
 These are deliberate scope boundaries.
 

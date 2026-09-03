@@ -6,7 +6,7 @@ The only response executor in this phase is `MockResponseExecutor`. It records i
 
 ## Approval gates
 
-Actions marked with `approval required for ...` are stored as `pending_approval` and are not marked executed.
+Actions marked with `approval required for ...` declare a **proposed response pending approval**. In simulation they are stored as `pending_approval` and are not marked executed. This is a pending-approval proposal, not an automatic execution gate that runs after approval is granted.
 
 High-impact identity disablement (`disable_account`) is always pending approval in the mock runtime, even when written as `disable account <asset>;`.
 

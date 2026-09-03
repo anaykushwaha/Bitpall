@@ -44,7 +44,10 @@ reconnect_stmt := 'reconnect' 'endpoint' IDENT ';'
 reenable_account_stmt := 'reenable' 'account' IDENT ';'
 
 test_decl := 'test' IDENT '{' expect_stmt* '}'
-expect_stmt := 'expect' 'rule' IDENT 'to_match' ';'
+expect_stmt := 'expect' 'rule' IDENT expect_body ';'
+expect_body := 'to_match'
+            | 'to_not_match'
+            | 'confidence' compare_op NUMBER
 ```
 
 ## Expressions
@@ -75,5 +78,6 @@ compare_op  := '==' | '!=' | '>' | '>=' | '<' | '<='
 - Vendor-specific action adapters
 - Function-call response syntax beyond the statements above
 - Complex type annotations
-- Imports/modules across files
+- Typed telemetry / event payload schemas (property paths such as `file.extension` are not schema-validated yet)
+- Imports/modules across files — Bitpall is currently a single compilation unit; modular rule packs are future work
 - Macros or templates

@@ -86,6 +86,19 @@ export function check(program: ProgramNode, source: SourceFile): CheckResult {
               }),
             );
           }
+          if (statement.kind === "ExpectRuleConfidence") {
+            if (statement.value.value < 0 || statement.value.value > 1) {
+              diagnostics.push(
+                createDiagnostic({
+                  code: "BITPALL3004",
+                  severity: "error",
+                  message: `Confidence value ${statement.value.value} is outside allowed range 0.0 to 1.0`,
+                  fileName: source.fileName,
+                  range: statement.value.range,
+                }),
+              );
+            }
+          }
         }
       }
     }

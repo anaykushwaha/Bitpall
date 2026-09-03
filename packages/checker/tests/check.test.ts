@@ -151,6 +151,39 @@ workspace w {
     expect(result.diagnostics.some((d) => d.code === "BITPALL3003")).toBe(true);
   });
 
+  it("detects unknown rules in to_not_match assertions", () => {
+    const result = checkSource(`
+workspace w {
+  telemetry edr { source = "a"; }
+  test t { expect rule missing_rule to_not_match; }
+}
+`);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3003")).toBe(true);
+  });
+
+  it("detects unknown rules in confidence assertions", () => {
+    const result = checkSource(`
+workspace w {
+  telemetry edr { source = "a"; }
+  test t { expect rule missing_rule confidence >= 0.9; }
+}
+`);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3003")).toBe(true);
+  });
+
+  it("detects invalid confidence in expect assertions", () => {
+    const result = checkSource(`
+workspace w {
+  telemetry edr { source = "a"; }
+  rule r {
+    observe process_start where process.name == "x";
+  }
+  test t { expect rule r confidence >= 1.5; }
+}
+`);
+    expect(result.diagnostics.some((d) => d.code === "BITPALL3004")).toBe(true);
+  });
+
   it("detects invalid confidence", () => {
     const result = checkSource(`
 workspace w {
