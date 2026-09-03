@@ -24,15 +24,15 @@ Bitpall treats the detection chain itself as a first-class language construct.
 
 A policy can express:
 
-* ordered multi-stage attack behavior
-* temporal relationships between events
-* confidence thresholds
-* minimum telemetry-source requirements
-* response plans
-* approval-gated high-impact actions
-* rollback metadata
-* deterministic test scenarios
-* explainable detection results
+- ordered multi-stage attack behavior
+- temporal relationships between events
+- confidence thresholds
+- minimum telemetry-source requirements
+- response plans
+- approval-gated high-impact actions
+- rollback metadata
+- deterministic test scenarios
+- explainable detection results
 
 This makes security logic easier to **write, inspect, test, replay, and explain**.
 
@@ -62,13 +62,13 @@ That logic is frequently distributed across vendor consoles, detection rules, sc
 
 This creates several problems:
 
-* ordered event chains are difficult to express in one place
-* timing relationships can become difficult to reason about
-* evidence requirements may be disconnected from detection logic
-* high-impact responses may not be visibly connected to the detection that triggered them
-* analysts may struggle to understand exactly why a detection matched
-* reproducing the same scenario for testing can be difficult
-* response automation introduces additional safety concerns
+- ordered event chains are difficult to express in one place
+- timing relationships can become difficult to reason about
+- evidence requirements may be disconnected from detection logic
+- high-impact responses may not be visibly connected to the detection that triggered them
+- analysts may struggle to understand exactly why a detection matched
+- reproducing the same scenario for testing can be difficult
+- response automation introduces additional safety concerns
 
 Bitpall addresses these problems by providing a small language specifically designed around **behavioral detection and safe response planning**.
 
@@ -90,14 +90,14 @@ A Bitpall policy describes:
 
 The interpreter then evaluates simulated security events deterministically and produces:
 
-* a detection result
-* the matched event chain
-* confidence and telemetry-source information
-* structured explanations
-* a response plan
-* audit information
-* approval-pending actions
-* rollback metadata
+- a detection result
+- the matched event chain
+- confidence and telemetry-source information
+- structured explanations
+- a response plan
+- audit information
+- approval-pending actions
+- rollback metadata
 
 No real security infrastructure is modified.
 
@@ -235,14 +235,14 @@ It provides context for the decision.
 
 The interpreter can explain:
 
-* which events matched each stage
-* why candidate events were rejected
-* whether an event occurred outside a time window
-* whether confidence requirements were satisfied
-* whether sufficient telemetry sources were present
-* why a complete chain failed
-* which response actions were planned
-* which actions require approval
+- which events matched each stage
+- why candidate events were rejected
+- whether an event occurred outside a time window
+- whether confidence requirements were satisfied
+- whether sufficient telemetry sources were present
+- why a complete chain failed
+- which response actions were planned
+- which actions require approval
 
 The same policy and mock event stream can also be replayed deterministically.
 
@@ -282,13 +282,13 @@ recorded_rollback
 
 Examples of actions represented by the runtime include:
 
-* endpoint isolation
-* process termination
-* session revocation
-* account disablement
-* evidence preservation
-* endpoint reconnection
-* account re-enablement
+- endpoint isolation
+- process termination
+- session revocation
+- account disablement
+- evidence preservation
+- endpoint reconnection
+- account re-enablement
 
 These actions are **simulated or recorded**.
 
@@ -310,16 +310,16 @@ Bitpall includes a browser-based playground for interacting with the language.
 
 The playground allows users to:
 
-* select cybersecurity scenarios
-* edit Bitpall policies
-* edit simulated security events
-* run policy simulations
-* run policy tests
-* inspect detection results
-* inspect matched event chains
-* inspect response plans
-* view detailed AST and interpreter trace information
-* export deterministic Markdown detection reports
+- select cybersecurity scenarios
+- edit Bitpall policies
+- edit simulated security events
+- run policy simulations
+- run policy tests
+- inspect detection results
+- inspect matched event chains
+- inspect response plans
+- view detailed AST and interpreter trace information
+- export deterministic Markdown detection reports
 
 The playground is intended to make the language understandable without requiring users to interact directly with the underlying TypeScript packages.
 
@@ -391,25 +391,25 @@ This separation keeps language processing, semantic analysis, detection logic, r
 
 Bitpall currently provides:
 
-* Cybersecurity-focused `.bitpall` language
-* Declarative behavioral detection policies
-* Lexer and recursive-descent parser
-* Typed AST
-* Semantic checking
-* Structured diagnostics with source locations
-* Temporal multi-stage event-chain detection
-* Deterministic candidate selection and backtracking
-* Confidence requirements
-* Multi-source telemetry requirements
-* Explainable detection traces
-* Simulated response actions
-* Approval-gated actions
-* Rollback metadata
-* Mock runtime and audit logging
-* Policy test execution
-* Three complete cybersecurity scenarios
-* Interactive browser playground
-* Deterministic Markdown security-report export
+- Cybersecurity-focused `.bitpall` language
+- Declarative behavioral detection policies
+- Lexer and recursive-descent parser
+- Typed AST
+- Semantic checking
+- Structured diagnostics with source locations
+- Temporal multi-stage event-chain detection
+- Deterministic candidate selection and backtracking
+- Confidence requirements
+- Multi-source telemetry requirements
+- Explainable detection traces
+- Simulated response actions
+- Approval-gated actions
+- Rollback metadata
+- Mock runtime and audit logging
+- Policy test execution
+- Three complete cybersecurity scenarios
+- Interactive browser playground
+- Deterministic Markdown security-report export
 
 ---
 
@@ -417,8 +417,8 @@ Bitpall currently provides:
 
 ## Requirements
 
-* **Node.js 20+**
-* **pnpm 9.15+**
+- **Node.js 20+**
+- **pnpm 9.15+**
 
 The repository's `package.json` specifies the expected package-manager version.
 
@@ -479,13 +479,13 @@ pnpm example:data-exfiltration
 
 ### What these checks cover
 
-* **Formatting** — verifies repository formatting
-* **Linting** — checks TypeScript and source-code quality
-* **Type checking** — verifies workspace type safety
-* **Tests** — runs automated unit and integration tests
-* **Build** — verifies that packages and applications compile successfully
-* **Verification** — checks workspace/package wiring
-* **Scenario runners** — exercise the three end-to-end cybersecurity demonstrations
+- **Formatting** — verifies repository formatting
+- **Linting** — checks TypeScript and source-code quality
+- **Type checking** — verifies workspace type safety
+- **Tests** — runs automated unit and integration tests
+- **Build** — verifies that packages and applications compile successfully
+- **Verification** — checks workspace/package wiring
+- **Scenario runners** — exercise the three end-to-end cybersecurity demonstrations
 
 Automated tests cover both positive and negative behavior.
 
@@ -497,13 +497,13 @@ Manual browser QA of the playground is an additional human verification step.
 
 More detailed documentation is available in `docs/`:
 
-* [Overview](./docs/overview.md)
-* [Getting Started](./docs/getting-started.md)
-* [Architecture](./docs/architecture.md)
-* [Grammar](./docs/grammar.md)
-* [Language Reference](./docs/language-reference.md)
-* [Runtime Model](./docs/runtime-model.md)
-* [Safety Model](./docs/safety-model.md)
+- [Overview](./docs/overview.md)
+- [Getting Started](./docs/getting-started.md)
+- [Architecture](./docs/architecture.md)
+- [Grammar](./docs/grammar.md)
+- [Language Reference](./docs/language-reference.md)
+- [Runtime Model](./docs/runtime-model.md)
+- [Safety Model](./docs/safety-model.md)
 
 For contribution and development guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -515,13 +515,13 @@ Bitpall is a **hackathon/demo prototype**, not a production security platform.
 
 The current project intentionally does not provide:
 
-* production security-product integrations
-* real endpoint, identity, or network mutation
-* real destructive security actions
-* a full Language Server Protocol implementation
-* a VS Code extension
-* modules, macros, or package publishing
-* JSON/PDF or other exporter formats beyond Markdown
+- production security-product integrations
+- real endpoint, identity, or network mutation
+- real destructive security actions
+- a full Language Server Protocol implementation
+- a VS Code extension
+- modules, macros, or package publishing
+- JSON/PDF or other exporter formats beyond Markdown
 
 These are deliberate scope boundaries.
 
@@ -535,16 +535,16 @@ The current implementation represents the completed scope of the Bitpall hackath
 
 The project has:
 
-* a working language pipeline
-* semantic validation
-* deterministic interpretation
-* simulated response execution
-* automated tests
-* end-to-end example scenarios
-* an interactive playground
-* Markdown report export
-* project documentation
-* an explicit safety model
+- a working language pipeline
+- semantic validation
+- deterministic interpretation
+- simulated response execution
+- automated tests
+- end-to-end example scenarios
+- an interactive playground
+- Markdown report export
+- project documentation
+- an explicit safety model
 
 Future production-oriented capabilities would require additional engineering, security review, infrastructure integrations, and operational safeguards.
 
@@ -556,17 +556,16 @@ Contributions are welcome.
 
 Before contributing, please read [CONTRIBUTING.md](./CONTRIBUTING.md) for:
 
-* development setup
-* architecture guidelines
-* coding standards
-* testing requirements
-* safety requirements
-* documentation expectations
-* pull-request guidelines
+- development setup
+- architecture guidelines
+- coding standards
+- testing requirements
+- safety requirements
+- documentation expectations
+- pull-request guidelines
 
 ---
 
 # License
 
 See [LICENSE](./LICENSE).
-

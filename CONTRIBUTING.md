@@ -14,10 +14,10 @@ This document explains how to set up the project, maintain its architecture, val
 
 Before contributing, make sure you have:
 
-* **Node.js 20 or later**
-* **pnpm 9 or later**
-* **Git**
-* A code editor with TypeScript support (VS Code is recommended)
+- **Node.js 20 or later**
+- **pnpm 9 or later**
+- **Git**
+- A code editor with TypeScript support (VS Code is recommended)
 
 ### Getting the Repository
 
@@ -98,25 +98,25 @@ Contributions should follow these principles:
 
 ### Keep TypeScript Strict
 
-* Preserve strict TypeScript settings.
-* Do not introduce `any`.
-* Prefer explicit types at package boundaries.
-* Avoid unnecessary type assertions.
-* Keep public APIs predictable and well documented.
+- Preserve strict TypeScript settings.
+- Do not introduce `any`.
+- Prefer explicit types at package boundaries.
+- Avoid unnecessary type assertions.
+- Keep public APIs predictable and well documented.
 
 ### Preserve Package Boundaries
 
 Keep responsibilities separated between:
 
-* AST modeling
-* Lexing
-* Parsing
-* Semantic checking
-* Interpretation
-* Runtime behavior
-* Language services
-* Exporting
-* Playground presentation
+- AST modeling
+- Lexing
+- Parsing
+- Semantic checking
+- Interpretation
+- Runtime behavior
+- Language services
+- Exporting
+- Playground presentation
 
 Do not move logic into a higher-level package simply because it is convenient.
 
@@ -130,10 +130,10 @@ Avoid unrelated refactoring in the same pull request unless it is necessary for 
 
 When modifying existing functionality:
 
-* Understand the current behavior first.
-* Add or update tests where behavior changes.
-* Avoid breaking existing policies or examples without a deliberate design reason.
-* Update documentation when user-visible behavior changes.
+- Understand the current behavior first.
+- Add or update tests where behavior changes.
+- Avoid breaking existing policies or examples without a deliberate design reason.
+- Update documentation when user-visible behavior changes.
 
 ---
 
@@ -147,13 +147,13 @@ Safety is a core architectural requirement, not an optional feature.
 
 Contributions must not introduce code that:
 
-* destroys data,
-* disables real accounts,
-* terminates real processes,
-* isolates real machines,
-* modifies real security infrastructure,
-* performs unauthorized credential or session manipulation,
-* or otherwise performs destructive actions against real systems.
+- destroys data,
+- disables real accounts,
+- terminates real processes,
+- isolates real machines,
+- modifies real security infrastructure,
+- performs unauthorized credential or session manipulation,
+- or otherwise performs destructive actions against real systems.
 
 Security responses should remain **simulated, recorded, approval-gated, or otherwise safely contained** within the project's intended execution model.
 
@@ -259,12 +259,12 @@ Tests are an important part of maintaining Bitpall's language behavior.
 
 When changing behavior:
 
-* Add a regression test when practical.
-* Update an existing test if its expected behavior intentionally changed.
-* Test both successful and unsuccessful cases when appropriate.
-* Include malformed-input cases for parsers, validators, and language-facing functionality.
-* Verify that diagnostics remain understandable.
-* For security-response behavior, verify that unsafe actions remain simulated or approval-gated.
+- Add a regression test when practical.
+- Update an existing test if its expected behavior intentionally changed.
+- Test both successful and unsuccessful cases when appropriate.
+- Include malformed-input cases for parsers, validators, and language-facing functionality.
+- Verify that diagnostics remain understandable.
+- For security-response behavior, verify that unsafe actions remain simulated or approval-gated.
 
 Tests should focus on observable behavior rather than unnecessary implementation details.
 
@@ -274,12 +274,12 @@ Tests should focus on observable behavior rather than unnecessary implementation
 
 When adding or modifying `.bitpall` policies:
 
-* Keep syntax examples readable.
-* Use meaningful workspace, asset, telemetry, rule, and test names.
-* Include realistic but simulated security scenarios.
-* Prefer examples that demonstrate a specific language capability.
-* Keep examples safe to execute.
-* Update related documentation when syntax or semantics change.
+- Keep syntax examples readable.
+- Use meaningful workspace, asset, telemetry, rule, and test names.
+- Include realistic but simulated security scenarios.
+- Prefer examples that demonstrate a specific language capability.
+- Keep examples safe to execute.
+- Update related documentation when syntax or semantics change.
 
 If a policy demonstrates a new language feature, consider adding a corresponding automated test.
 
@@ -291,11 +291,11 @@ Bitpall uses structured diagnostics to communicate lexer, parser, and semantic e
 
 When changing diagnostic behavior:
 
-* Preserve diagnostic codes unless there is a deliberate reason to change them.
-* Provide useful source locations.
-* Make messages understandable to users.
-* Avoid exposing unnecessary internal implementation details.
-* Update tests when diagnostic wording or behavior intentionally changes.
+- Preserve diagnostic codes unless there is a deliberate reason to change them.
+- Provide useful source locations.
+- Make messages understandable to users.
+- Avoid exposing unnecessary internal implementation details.
+- Update tests when diagnostic wording or behavior intentionally changes.
 
 A user should be able to understand what went wrong and where it happened.
 
@@ -307,16 +307,16 @@ Documentation is considered part of the implementation.
 
 Changes that affect any of the following should generally include documentation updates:
 
-* Bitpall syntax
-* Language semantics
-* Compiler architecture
-* Diagnostics
-* Runtime behavior
-* Safety behavior
-* Playground functionality
-* Example scenarios
-* Setup or development commands
-* Public APIs
+- Bitpall syntax
+- Language semantics
+- Compiler architecture
+- Diagnostics
+- Runtime behavior
+- Safety behavior
+- Playground functionality
+- Example scenarios
+- Setup or development commands
+- Public APIs
 
 At minimum, consider whether the following files need updating:
 
@@ -334,13 +334,13 @@ Example policies and other documentation should remain consistent with the actua
 
 Contributors must update `PROJECT_STATUS.md` when a contribution affects:
 
-* implementation status,
-* roadmap phase status,
-* known limitations,
-* technical debt,
-* architectural decisions,
-* verification results,
-* or other project-level status information.
+- implementation status,
+- roadmap phase status,
+- known limitations,
+- technical debt,
+- architectural decisions,
+- verification results,
+- or other project-level status information.
 
 Use only the status labels defined by `PROJECT_STATUS.md`.
 
@@ -363,13 +363,13 @@ Before opening a pull request:
 
 ### Pull Requests Should
 
-* Have a clear and descriptive title.
-* Explain what changed.
-* Explain why the change was necessary.
-* Mention relevant tests or validation performed.
-* Identify any user-visible behavior changes.
-* Mention safety implications when runtime or response behavior changes.
-* Link related issues, roadmap items, or status updates when applicable.
+- Have a clear and descriptive title.
+- Explain what changed.
+- Explain why the change was necessary.
+- Mention relevant tests or validation performed.
+- Identify any user-visible behavior changes.
+- Mention safety implications when runtime or response behavior changes.
+- Link related issues, roadmap items, or status updates when applicable.
 
 ### Keep Pull Requests Focused
 
@@ -377,11 +377,11 @@ A pull request should ideally address one logical change.
 
 Avoid combining unrelated:
 
-* feature work,
-* refactoring,
-* formatting changes,
-* dependency upgrades,
-* or documentation changes
+- feature work,
+- refactoring,
+- formatting changes,
+- dependency upgrades,
+- or documentation changes
 
 unless they are directly related.
 
@@ -417,22 +417,22 @@ Do not commit secrets, API keys, credentials, local configuration, or machine-sp
 
 Use this checklist before opening a pull request:
 
-* [ ] The change has a clear purpose.
-* [ ] Existing architecture boundaries are preserved.
-* [ ] TypeScript remains strict.
-* [ ] No unnecessary `any` types were introduced.
-* [ ] Relevant tests were added or updated.
-* [ ] `pnpm format:check` passes.
-* [ ] `pnpm lint` passes.
-* [ ] `pnpm check` passes.
-* [ ] `pnpm test` passes.
-* [ ] `pnpm build` passes when relevant.
-* [ ] Relevant example scenarios were verified.
-* [ ] Documentation was updated where necessary.
-* [ ] `PROJECT_STATUS.md` was updated when applicable.
-* [ ] No unsafe real-world security actions were introduced.
-* [ ] No secrets or sensitive local files were committed.
-* [ ] The final Git diff contains only intended changes.
+- [ ] The change has a clear purpose.
+- [ ] Existing architecture boundaries are preserved.
+- [ ] TypeScript remains strict.
+- [ ] No unnecessary `any` types were introduced.
+- [ ] Relevant tests were added or updated.
+- [ ] `pnpm format:check` passes.
+- [ ] `pnpm lint` passes.
+- [ ] `pnpm check` passes.
+- [ ] `pnpm test` passes.
+- [ ] `pnpm build` passes when relevant.
+- [ ] Relevant example scenarios were verified.
+- [ ] Documentation was updated where necessary.
+- [ ] `PROJECT_STATUS.md` was updated when applicable.
+- [ ] No unsafe real-world security actions were introduced.
+- [ ] No secrets or sensitive local files were committed.
+- [ ] The final Git diff contains only intended changes.
 
 ---
 
@@ -445,4 +445,3 @@ When in doubt:
 > Prefer a small, well-tested, well-documented change over a large change that introduces unnecessary complexity.
 
 Thank you for helping improve Bitpall.
-
